@@ -1,0 +1,131 @@
+### 1. Mock Login
+POST http://localhost:8001/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
+
+### 2. Create Project (Wizard Step 1-4)
+POST http://localhost:8001/api/projects
+Content-Type: application/json
+
+{
+  "name": "HealthTrack Clinic System",
+  "description": "A web application for clinics to manage appointments, billing, and patient records.",
+  "domain": "Healthcare",
+  "complexity": "Standard",
+  "actors": ["Patient", "Doctor", "Admin"],
+  "features": ["Appointment Booking", "Billing Management", "Prescription Writing"],
+  "entities": ["Patient", "Doctor", "Appointment", "Invoice"]
+}
+
+### 3. Generate Specification (AI Job #1 & #2)
+# NOTE: Replace the project ID in the URL below (e.g., 1) with the ID returned in the previous request
+POST http://localhost:8001/api/specifications/projects/1/specification/generate
+Content-Type: application/json
+
+{}
+
+### 4. Approve Specification
+# NOTE: Replace the specification ID in the URL below (e.g., 1) with the ID returned in the previous request
+POST http://localhost:8001/api/specifications/1/approve
+Content-Type: application/json
+
+{}
+
+### 5. Regenerate Specification (Optional)
+# NOTE: Replace the specification ID in the URL below (e.g., 1) with the ID returned in the previous request
+POST http://localhost:8001/api/specifications/1/regenerate
+Content-Type: application/json
+
+{}
+
+### 6. Generate Diagrams URLs (Use Case, ER, Class)
+# NOTE: Replace the specification ID in the URL below (e.g., 1) with the ID returned in the previous request
+GET http://localhost:8001/api/artifacts/1/diagrams
+Content-Type: application/json
+
+### 7. Download SRS Markdown
+# NOTE: Replace the specification ID in the URL below (e.g., 1) with the ID returned in the previous request
+GET http://localhost:8001/api/artifacts/1/srs?format=markdown
+Content-Type: application/json
+
+### 8. Download SRS PDF (Save response to file in VS Code Rest Client)
+# NOTE: Replace the specification ID in the URL below (e.g., 1) with the ID returned in the previous request
+GET http://localhost:8001/api/artifacts/1/srs?format=pdf
+Content-Type: application/json
+
+###########################################################
+### OLD ENDPOINTS (DIAGNOSTICS)
+###########################################################
+
+### Verify Local Express Server
+GET http://localhost:8001/api/health
+Content-Type: application/json
+
+### Encode Diagram manually
+POST http://localhost:8001/api/ai/diagram
+Content-Type: application/json
+
+{
+  "diagram": "@startuml\nclass Vehicle {\n  speed : int\n  color : string\n  accelerate() : void\n  brake() : void\n}\n\nclass Car {\n  wheelsCount : int\n}\n\nVehicle <|-- Car\n@enduml"
+}
+
+### Generate ER UML code manually
+POST http://localhost:8001/api/ai/generate-ER-code
+Content-Type: application/json
+
+{
+  "type": "er",
+  "entities": ["User", "Order", "Product"],
+  "attributes": [
+    { "entity": "User", "name": "id", "type": "int", "pk": true },
+    { "entity": "User", "name": "username", "type": "string", "required": true },
+    { "entity": "Order", "name": "id", "type": "int", "pk": true },
+    { "entity": "Order", "name": "date", "type": "date" },
+    { "entity": "Product", "name": "id", "type": "int", "pk": true },
+    { "entity": "Product", "name": "name", "type": "string" }
+  ],
+  "relationships": [
+    { "from": "User", "to": "Order", "type": "1:N" },
+    { "from": "Order", "to": "Product", "type": "N:M" }
+  ]
+}
+
+### Generate Use Case UML manually
+POST http://localhost:8001/api/ai/generate-usecase-code
+Content-Type: application/json
+
+{
+  "actors": ["User", "Admin"],
+  "useCases": ["Login", "Register", "Delete User"],
+  "relationships": [
+    { "from": "User", "to": "Login" },
+    { "from": "User", "to": "Register" },
+    { "from": "Admin", "to": "Delete User" },
+    { "from": "Delete User", "to": "Login", "type": "include" }
+  ]
+}
+
+### Generate Class UML manually
+POST http://localhost:8001/api/ai/generate-class-code
+Content-Type: application/json
+
+{
+  "classes": [
+    {
+      "name": "Vehicle",
+      "attributes": ["speed : int", "color : string"],
+      "methods": ["accelerate()", "brake()"]
+    },
+    {
+      "name": "Car",
+      "attributes": ["wheelsCount : int"]
+    }
+  ],
+  "relationships": [
+    { "from": "Vehicle", "to": "Car", "type": "inheritance" }
+  ]
+}
