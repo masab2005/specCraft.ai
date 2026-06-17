@@ -27,7 +27,22 @@ USE CASE DIAGRAM RULES:
 2. Declare use cases using: usecase "Use Case Name" as UCAlias
 3. Connect actors to use cases using standard arrows: ActorAlias --> UCAlias
 4. Keep it clean and simple. Do NOT use colons in aliases.
-5. NO explanations, NO markdown. Start with @startuml and end with @enduml.
+5. NO explanations, NO markdown wrappers (like \`\`\`puml). Start directly with @startuml and end with @enduml.
+
+EXAMPLE:
+@startuml
+left to right direction
+actor "Customer" as customer
+actor "Admin" as admin
+
+usecase "Place Order" as UC1
+usecase "Cancel Order" as UC2
+usecase "Manage Inventory" as UC3
+
+customer --> UC1
+customer --> UC2
+admin --> UC3
+@enduml
 
 NOW GENERATE:
 `;
@@ -52,12 +67,31 @@ Attributes: ${JSON.stringify(attributes)}
 Relationships: ${JSON.stringify(relationships)}
 
 ER DIAGRAM RULES:
-1. Use ONLY "entity" blocks with attributes inside.
-2. Use ONLY these relation types:
-   1:N -> ||--o{
-   N:M -> }o--o{
-   1:1 -> ||--||
-3. NO explanations, NO markdown. Start with @startuml and end with @enduml.
+1. Use ONLY "entity" blocks with attributes defined INSIDE curly braces { ... }. 
+2. Never declare attributes in parentheses. Always define attributes inside the curly braces of the entity block.
+3. Format each attribute inside curly braces as: attributeName : type
+4. Use ONLY these relation types:
+   - One-to-Many: EntityA ||--o{ EntityB : "label"
+   - Many-to-Many: EntityA }o--o{ EntityB : "label"
+   - One-to-One: EntityA ||--|| EntityB : "label"
+5. NO explanations, NO markdown wrappers. Start directly with @startuml and end with @enduml.
+
+EXAMPLE:
+@startuml
+entity "Customer" {
+  * customerId : Integer
+  name : String
+  email : String
+}
+
+entity "Order" {
+  * orderId : Integer
+  customerId : Integer
+  orderDate : Date
+}
+
+Customer ||--o{ Order : "places"
+@enduml
 
 NOW GENERATE:
 `;
@@ -82,14 +116,31 @@ Attributes: ${JSON.stringify(attributes)}
 Relationships: ${JSON.stringify(relationships)}
 
 CLASS DIAGRAM RULES:
-1. Declare classes with class ClassName { ... } syntax.
+1. Declare classes with class ClassName { ... } syntax. Always define attributes inside the curly braces.
 2. Declare attributes as fieldName : type.
 3. Use ONLY standard relationships:
    Inheritance: SuperClass <|-- SubClass
-   Association: ClassA --> ClassB
-   Aggregation: ClassA o-- ClassB
-   Composition: ClassA *-- ClassB
-4. NO explanations, NO markdown. Start with @startuml and end with @enduml.
+   Association: ClassA --> ClassB : "label"
+   Aggregation: ClassA o-- ClassB : "label"
+   Composition: ClassA *-- ClassB : "label"
+4. NO explanations, NO markdown wrappers. Start directly with @startuml and end with @enduml.
+
+EXAMPLE:
+@startuml
+class Customer {
+  customerId : Integer
+  name : String
+  email : String
+}
+
+class Order {
+  orderId : Integer
+  customerId : Integer
+  orderDate : Date
+}
+
+Customer --> Order : "places"
+@enduml
 
 NOW GENERATE:
 `;

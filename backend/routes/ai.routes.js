@@ -41,7 +41,7 @@ router.post("/test", async (req, res) => {
 
   } catch (err) {
     console.error(err);
-    res.status(500).json({ 
+    res.status(500).json({
       error: "AI request failed",
       details: err.message
     });
@@ -103,7 +103,7 @@ router.post("/diagram", async (req, res) => {
 
 router.post("/generate-ER-code", async (req, res) => {
   try {
-    const { entities,attributes, relationships, type = "er" } = req.body;
+    const { entities, attributes, relationships, type = "er" } = req.body;
 
     if (!entities || !Array.isArray(entities)) {
       return res.status(400).json({
@@ -114,7 +114,7 @@ router.post("/generate-ER-code", async (req, res) => {
     /**
      * 1. Build strict prompt
      */
-    const prompt =`
+    const prompt = `
 You are a STRICT PlantUML generator for ER diagrams ONLY.
 
 You must follow syntax exactly. Do NOT use class diagrams. Do NOT use inheritance.
@@ -170,8 +170,8 @@ Return ONLY valid PlantUML code.
       temperature: 0.2,
       messages: [
         {
-        role: "system",
-        content: `
+          role: "system",
+          content: `
         You are NOT a designer.
         You are NOT allowed to choose diagram style.
 

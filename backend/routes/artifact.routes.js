@@ -1,20 +1,65 @@
 import express from 'express';
-import Specification from '../models/Specification.js';
+import { supabase } from '../config/supabase.js';
 import { generateUseCasePuml, generateErPuml, generateClassPuml, encodePumlToUrl } from '../services/diagram.service.js';
 import { generateSrsCore, generateSrsNfr, generateSrsOverview, assembleSrs } from '../services/srs.service.js';
 import { compileMarkdownToPdfStream } from '../utils/pdfCompiler.js';
+import { requireAuth } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
+
+// Apply requireAuth middleware to all artifact endpoints
+router.use(requireAuth);
+
+// Helper to convert readable stream to Buffer
+function streamToBuffer(stream) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    stream.on('data', (chunk) => chunks.push(chunk));
+    stream.on('end', () => resolve(Buffer.concat(chunks)));
+    stream.on('error', (err) => reject(err));
+  });
+}
 
 // Generate and get diagrams URLs
 router.get('/:id/diagrams', async (req, res) => {
   try {
-    const spec = await Specification.findByPk(req.params.id);
-    if (!spec) {
+    const { data: spec, error } = await supabase
+      .from('specifications')
+      .select('*')
+      .eq('id', req.params.id)
+      .single();
+
+    if (error || !spec) {
       return res.status(404).json({ error: 'Specification not found' });
     }
 
+    // Verify ownership of the associated project
+    const { data: project, error: pError } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('id', spec.projectId)
+      .single();
+
+    if (pError || !project || project.userId !== req.user.id) {
+      return res.status(403).json({ error: 'Access Denied: You do not own this project' });
+    }
+
+    // Only approved specifications can generate diagrams
+    if (spec.approvalStatus !== 'approved') {
+      return res.status(400).json({
+        error: 'Specification must be approved before generating diagrams'
+      });
+    }
+
     const master = spec.masterJson;
+
+    // Return cached diagrams if they exist
+    if (master.diagrams && typeof master.diagrams === 'object') {
+      return res.json({
+        success: true,
+        diagrams: master.diagrams
+      });
+    }
 
     // Generate PlantUML syntaxes via AI and encode them in parallel
     const [ucPuml, erPuml, classPuml] = await Promise.all([
@@ -23,22 +68,39 @@ router.get('/:id/diagrams', async (req, res) => {
       generateClassPuml(master.entities, master.attributes, master.relationships)
     ]);
 
+    const diagrams = {
+      usecase: {
+        plantuml: ucPuml,
+        url: encodePumlToUrl(ucPuml)
+      },
+      er: {
+        plantuml: erPuml,
+        url: encodePumlToUrl(erPuml)
+      },
+      class: {
+        plantuml: classPuml,
+        url: encodePumlToUrl(classPuml)
+      }
+    };
+
+    // Store generated diagrams in masterJson
+    master.diagrams = diagrams;
+
+    const { error: updateError } = await supabase
+      .from('specifications')
+      .update({
+        masterJson: master,
+        updatedAt: new Date().toISOString()
+      })
+      .eq('id', spec.id);
+
+    if (updateError) {
+      console.error('Failed to cache diagrams in specifications:', updateError);
+    }
+
     return res.json({
       success: true,
-      diagrams: {
-        usecase: {
-          plantuml: ucPuml,
-          url: encodePumlToUrl(ucPuml)
-        },
-        er: {
-          plantuml: erPuml,
-          url: encodePumlToUrl(erPuml)
-        },
-        class: {
-          plantuml: classPuml,
-          url: encodePumlToUrl(classPuml)
-        }
-      }
+      diagrams
     });
   } catch (err) {
     console.error('Failed to generate diagram URLs:', err);
@@ -49,9 +111,25 @@ router.get('/:id/diagrams', async (req, res) => {
 // Generate and download SRS Document
 router.get('/:id/srs', async (req, res) => {
   try {
-    const spec = await Specification.findByPk(req.params.id);
-    if (!spec) {
+    const { data: spec, error: specError } = await supabase
+      .from('specifications')
+      .select('*')
+      .eq('id', req.params.id)
+      .single();
+
+    if (specError || !spec) {
       return res.status(404).json({ error: 'Specification not found' });
+    }
+
+    // Verify ownership of the associated project
+    const { data: project, error: pError } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('id', spec.projectId)
+      .single();
+
+    if (pError || !project || project.userId !== req.user.id) {
+      return res.status(403).json({ error: 'Access Denied: You do not own this project' });
     }
 
     // Only approved specifications can generate artifacts
@@ -80,8 +158,17 @@ router.get('/:id/srs', async (req, res) => {
       markdown = assembleSrs(projectName, core, nfr, overview);
 
       // Cache it in the database
-      spec.srsMarkdown = markdown;
-      await spec.save();
+      const { error: updateError } = await supabase
+        .from('specifications')
+        .update({
+          srsMarkdown: markdown,
+          updatedAt: new Date().toISOString()
+        })
+        .eq('id', spec.id);
+
+      if (updateError) {
+        console.error('Failed to cache SRS markdown:', updateError);
+      }
     }
 
     const format = req.query.format || 'pdf';
@@ -92,11 +179,38 @@ router.get('/:id/srs', async (req, res) => {
         markdown
       });
     } else if (format === 'pdf') {
+      const filePath = `srs_${spec.id}.pdf`;
+
+      // Check if PDF already exists in Supabase Storage
+      const { data: fileData, error: downloadError } = await supabase.storage
+        .from('srs-documents')
+        .download(filePath);
+
+      if (fileData && !downloadError) {
+        const buffer = Buffer.from(await fileData.arrayBuffer());
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="srs_${spec.id}.pdf"`);
+        return res.send(buffer);
+      }
+
+      // Compile on-the-fly and upload to Supabase Storage if not exists
+      const pdfStream = compileMarkdownToPdfStream(markdown);
+      const buffer = await streamToBuffer(pdfStream);
+
+      const { error: uploadError } = await supabase.storage
+        .from('srs-documents')
+        .upload(filePath, buffer, {
+          contentType: 'application/pdf',
+          upsert: true
+        });
+
+      if (uploadError) {
+        console.error('Failed to upload PDF to Supabase Storage:', uploadError);
+      }
+
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `attachment; filename="srs_${spec.id}.pdf"`);
-      
-      const pdfStream = compileMarkdownToPdfStream(markdown);
-      pdfStream.pipe(res);
+      return res.send(buffer);
     } else {
       return res.status(400).json({ error: 'Unsupported format. Use pdf or markdown.' });
     }

@@ -28,7 +28,48 @@ Content-Type: application/json
 
 {}
 
-### 4. Approve Specification
+### 4. Manually Edit Specification
+# NOTE: Replace the specification ID in the URL below (e.g., 1) with the ID returned in the previous request
+# This test request edits attributes (adding cnic) and inserts an invalid relationship to test filtering
+PUT http://localhost:8001/api/specifications/1
+Content-Type: application/json
+
+{
+  "masterJson": {
+    "project": {
+      "id": 1,
+      "name": "HealthTrack Clinic System",
+      "description": "A web application for clinics to manage appointments, billing, and patient records.",
+      "domain": "Healthcare",
+      "complexity": "Standard"
+    },
+    "actors": ["Patient", "Doctor", "Admin"],
+    "features": ["Appointment Booking", "Billing Management", "Prescription Writing"],
+    "entities": ["Patient", "Doctor", "Appointment", "Invoice"],
+    "attributes": {
+      "Patient": ["patientId", "name", "cnic"],
+      "Doctor": ["doctorId", "name", "status"],
+      "Appointment": ["appointmentId", "name", "status"],
+      "Invoice": ["invoiceId", "name", "status"]
+    },
+    "relationships": [
+      {
+        "source": "Patient",
+        "target": "Doctor",
+        "type": "one-to-many",
+        "label": "associates"
+      },
+      {
+        "source": "NonExistentEntity",
+        "target": "Patient",
+        "type": "one-to-many",
+        "label": "should_be_filtered_out"
+      }
+    ]
+  }
+}
+
+### 5. Approve Specification
 # NOTE: Replace the specification ID in the URL below (e.g., 1) with the ID returned in the previous request
 POST http://localhost:8001/api/specifications/1/approve
 Content-Type: application/json
