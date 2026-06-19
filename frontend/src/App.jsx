@@ -11,6 +11,21 @@ function App() {
   const [user, setUser] = useState(null);
   const [selectedProject, setSelectedProject] = useState(null);
   const [selectedSpecification, setSelectedSpecification] = useState(null);
+  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
+
+  // Synchronize theme class with documentElement
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+  };
 
   // Check user session on boot
   useEffect(() => {
@@ -62,6 +77,8 @@ function App() {
           onCreateProjectClick={() => setView('wizard')}
           onProjectSelect={handleProjectSelect}
           onLogout={handleLogout}
+          theme={theme}
+          toggleTheme={toggleTheme}
         />
       )}
       
@@ -80,6 +97,8 @@ function App() {
             setView('dashboard');
           }}
           onGoToArtifacts={handleGoToArtifacts}
+          theme={theme}
+          toggleTheme={toggleTheme}
         />
       )}
 
@@ -91,6 +110,8 @@ function App() {
             setSelectedSpecification(null);
             setView('workspace');
           }}
+          theme={theme}
+          toggleTheme={toggleTheme}
         />
       )}
     </div>

@@ -1,15 +1,12 @@
 import React, { useState } from 'react';
 import { api } from '../services/api';
 
-// Helper to sanitize weird names and special characters
 const sanitizeInput = (input, typeName) => {
   if (!input) return '';
   let sanitized = input.trim();
   if (typeName === 'entities' || typeName === 'actors') {
-    // Keep only alphanumeric characters, spaces, hyphens, and underscores
     sanitized = sanitized.replace(/[^a-zA-Z0-9\s-_]/g, '');
   } else if (typeName === 'features' || typeName === 'attributes') {
-    // Keep alphanumeric, spaces, hyphens, underscores, dots, and commas
     sanitized = sanitized.replace(/[^a-zA-Z0-9\s-_.,]/g, '');
   }
   return sanitized.replace(/\s+/g, ' ').trim();
@@ -22,12 +19,10 @@ export default function Wizard({ onCancel, onProjectCreated }) {
   const [domain, setDomain] = useState('Healthcare');
   const [complexity, setComplexity] = useState('Standard');
   
-  // Lists
   const [actors, setActors] = useState(['Patient', 'Doctor', 'Admin']);
   const [features, setFeatures] = useState(['Appointment Booking', 'Prescription Writing']);
   const [entities, setEntities] = useState(['Patient', 'Doctor', 'Appointment']);
   
-  // Individual input field text states
   const [actorInput, setActorInput] = useState('');
   const [featureInput, setFeatureInput] = useState('');
   const [entityInput, setEntityInput] = useState('');
@@ -35,7 +30,6 @@ export default function Wizard({ onCancel, onProjectCreated }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Helper to add tag with safety limits, duplicate checks, and sanitization
   const addTag = (input, list, setList, setInput, limit, typeName) => {
     const sanitized = sanitizeInput(input, typeName);
     if (!sanitized) {
@@ -45,7 +39,7 @@ export default function Wizard({ onCancel, onProjectCreated }) {
     
     const isDuplicate = list.some(item => item.trim().toLowerCase() === sanitized.toLowerCase());
     if (isDuplicate) {
-      setError(`"${sanitized}" is already in the list.`);
+      setError(`“${sanitized}” is already in the list.`);
       return;
     }
     
@@ -58,7 +52,6 @@ export default function Wizard({ onCancel, onProjectCreated }) {
     setInput('');
   };
 
-  // Helper to remove tag
   const removeTag = (tagToRemove, list, setList) => {
     setList(list.filter(item => item !== tagToRemove));
   };
@@ -101,16 +94,16 @@ export default function Wizard({ onCancel, onProjectCreated }) {
   };
 
   return (
-    <div className="min-h-screen bg-background font-sans flex flex-col justify-between">
+    <div className="min-h-screen bg-white font-sans flex flex-col justify-between antialiased text-[#171717]">
       {/* Header */}
-      <header className="bg-white border-b border-outline-variant h-16 flex items-center justify-between px-6 md:px-12">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded bg-[#1E293B] flex items-center justify-center text-white">
-            <span className="material-symbols-outlined text-[18px]">magic_button</span>
+      <header className="bg-white shadow-vercel-border h-16 flex items-center justify-between px-6 md:px-12">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded bg-[#171717] flex items-center justify-center text-white">
+            <span className="material-symbols-outlined text-[16px] font-bold">magic_button</span>
           </div>
-          <span className="font-semibold text-lg text-on-surface">New Project Wizard</span>
+          <span className="font-bold text-base text-[#171717] tracking-tight">New Project Wizard</span>
         </div>
-        <button onClick={onCancel} className="text-sm text-secondary hover:text-on-surface transition-colors">
+        <button onClick={onCancel} className="text-xs text-slate-500 hover:text-black transition-colors font-semibold">
           Cancel & Exit
         </button>
       </header>
@@ -124,30 +117,30 @@ export default function Wizard({ onCancel, onProjectCreated }) {
               <div className="flex flex-col items-center">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
                   step === s 
-                    ? 'bg-[#2563eb] text-white ring-4 ring-blue-100' 
+                    ? 'bg-[#171717] text-white ring-4 ring-slate-100' 
                     : step > s 
-                      ? 'bg-emerald-500 text-white' 
-                      : 'bg-slate-200 text-slate-500'
+                      ? 'bg-slate-800 text-white' 
+                      : 'bg-slate-100 text-slate-400'
                 }`}>
                   {step > s ? (
                     <span className="material-symbols-outlined text-sm font-bold">check</span>
                   ) : s}
                 </div>
-                <span className={`text-[11px] font-semibold mt-2 tracking-wide uppercase ${
-                  step === s ? 'text-[#2563eb]' : 'text-on-surface-variant'
+                <span className={`text-[10px] font-bold mt-2 tracking-wider uppercase ${
+                  step === s ? 'text-[#171717]' : 'text-slate-400'
                 }`}>
                   {s === 1 ? 'Project Info' : s === 2 ? 'Actors' : s === 3 ? 'Features' : 'Entities'}
                 </span>
               </div>
-              {s < 4 && <div className={`flex-1 h-0.5 mx-2 -mt-6 ${step > s ? 'bg-emerald-500' : 'bg-slate-200'}`} />}
+              {s < 4 && <div className={`flex-1 h-[1px] mx-2 -mt-6 ${step > s ? 'bg-slate-800' : 'bg-slate-100'}`} />}
             </React.Fragment>
           ))}
         </div>
 
         {/* Form Card */}
-        <div className="bg-white border border-outline-variant rounded-2xl p-8 shadow-sm">
+        <div className="bg-white shadow-vercel-card rounded-xl p-8">
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6 text-sm flex items-center gap-2">
+            <div className="bg-red-50/50 text-red-700 p-3 rounded-lg text-sm mb-6 flex items-center gap-2 shadow-vercel-border border border-transparent">
               <span className="material-symbols-outlined text-red-500 text-[18px]">error</span>
               <span>{error}</span>
             </div>
@@ -157,17 +150,17 @@ export default function Wizard({ onCancel, onProjectCreated }) {
           {step === 1 && (
             <div className="space-y-6">
               <div>
-                <h2 className="text-xl font-bold text-on-surface mb-1">Project Metadata</h2>
-                <p className="text-on-surface-variant text-sm">Define your project name and core description.</p>
+                <h2 className="text-lg font-bold text-[#171717] mb-1 tracking-tight">Project Metadata</h2>
+                <p className="text-slate-500 text-xs">Define your project name and core description.</p>
               </div>
 
               <div className="space-y-4 pt-2">
                 <div>
-                  <label className="block text-xs font-semibold text-on-surface mb-2" htmlFor="name">Project Name</label>
+                  <label className="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider" htmlFor="name">Project Name</label>
                   <input
-                    className="w-full bg-surface-container-low border border-outline-variant rounded px-3 py-2 text-on-surface font-medium focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                    className="w-full bg-white text-[#171717] text-[16px] px-3 py-2.5 rounded shadow-vercel-input focus:outline-none focus:shadow-vercel-input-focus transition-all duration-200 placeholder-slate-400"
                     id="name"
-                    placeholder="e.g. HealthTrack Clinic System"
+                    placeholder="e.g. HealthTrack Clinic System…"
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
@@ -175,12 +168,12 @@ export default function Wizard({ onCancel, onProjectCreated }) {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-on-surface mb-2" htmlFor="description">Description</label>
+                  <label className="block text-xs font-semibold text-slate-500 mb-2" htmlFor="description">Description</label>
                   <textarea
                     rows={4}
-                    className="w-full bg-surface-container-low border border-outline-variant rounded px-3 py-2 text-on-surface font-medium focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all leading-relaxed"
+                    className="w-full bg-white text-[#171717] text-[16px] px-3 py-2.5 rounded shadow-vercel-input focus:outline-none focus:shadow-vercel-input-focus transition-all duration-200 placeholder-slate-400 leading-relaxed"
                     id="description"
-                    placeholder="Explain what the software system does, its goal, and workflows..."
+                    placeholder="Explain what the software system does, its goal, and workflows…"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                   />
@@ -188,10 +181,10 @@ export default function Wizard({ onCancel, onProjectCreated }) {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-on-surface mb-2" htmlFor="domain">Domain / Industry</label>
+                    <label className="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider" htmlFor="domain">Domain / Industry</label>
                     <select
                       id="domain"
-                      className="w-full bg-surface-container-low border border-outline-variant rounded px-3 py-2 text-on-surface font-medium focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="w-full bg-white text-[#171717] text-[16px] px-3 py-2.5 rounded shadow-vercel-input focus:outline-none focus:shadow-vercel-input-focus transition-all duration-200"
                       value={domain}
                       onChange={(e) => setDomain(e.target.value)}
                     >
@@ -205,10 +198,10 @@ export default function Wizard({ onCancel, onProjectCreated }) {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-on-surface mb-2" htmlFor="complexity">System Complexity</label>
+                    <label className="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider" htmlFor="complexity">System Complexity</label>
                     <select
                       id="complexity"
-                      className="w-full bg-surface-container-low border border-outline-variant rounded px-3 py-2 text-on-surface font-medium focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="w-full bg-white text-[#171717] text-[16px] px-3 py-2.5 rounded shadow-vercel-input focus:outline-none focus:shadow-vercel-input-focus transition-all duration-200"
                       value={complexity}
                       onChange={(e) => setComplexity(e.target.value)}
                     >
@@ -226,15 +219,15 @@ export default function Wizard({ onCancel, onProjectCreated }) {
           {step === 2 && (
             <div className="space-y-6">
               <div>
-                <h2 className="text-xl font-bold text-on-surface mb-1">Define User Roles (Actors)</h2>
-                <p className="text-on-surface-variant text-sm">Specify the actors/users who interact with this system.</p>
+                <h2 className="text-lg font-bold text-[#171717] mb-1 tracking-tight">Define User Roles (Actors)</h2>
+                <p className="text-slate-500 text-xs">Specify the actors/users who interact with this system.</p>
               </div>
 
               <div className="space-y-4 pt-2">
                 <div className="flex gap-2">
                   <input
-                    className="flex-1 bg-surface-container-low border border-outline-variant rounded px-3 py-2 text-on-surface font-medium focus:outline-none focus:ring-2 focus:ring-primary"
-                    placeholder="Type actor name (e.g. Doctor) and press Add"
+                    className="flex-1 bg-white text-[#171717] text-[16px] px-3 py-2 rounded shadow-vercel-input focus:outline-none focus:shadow-vercel-input-focus transition-all duration-200 placeholder-slate-400"
+                    placeholder="Type actor name (e.g. Doctor) and press Enter…"
                     type="text"
                     value={actorInput}
                     onChange={(e) => setActorInput(e.target.value)}
@@ -242,7 +235,7 @@ export default function Wizard({ onCancel, onProjectCreated }) {
                   />
                   <button
                     onClick={() => addTag(actorInput, actors, setActors, setActorInput, 8, 'actors')}
-                    className="bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold px-4 rounded"
+                    className="bg-[#171717] hover:bg-[#333333] text-white text-xs font-semibold px-4 rounded-lg shadow-sm transition-colors"
                   >
                     Add
                   </button>
@@ -250,15 +243,15 @@ export default function Wizard({ onCancel, onProjectCreated }) {
 
                 <div className="flex flex-wrap gap-2 pt-2">
                   {actors.map(actor => (
-                    <span key={actor} className="bg-slate-100 border border-slate-200 text-slate-800 text-xs font-semibold px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm">
+                    <span key={actor} className="bg-slate-50 text-[#171717] text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-vercel-border">
                       {actor}
                       <button onClick={() => removeTag(actor, actors, setActors)} className="text-slate-400 hover:text-slate-600 focus:outline-none">
-                        <span className="material-symbols-outlined text-[14px] font-bold">close</span>
+                        <span className="material-symbols-outlined text-[13px] font-bold">close</span>
                       </button>
                     </span>
                   ))}
                   {actors.length === 0 && (
-                    <p className="text-xs text-on-surface-variant italic">No actors defined yet. Add at least one.</p>
+                    <p className="text-xs text-slate-400 italic">No actors defined yet. Add at least one.</p>
                   )}
                 </div>
               </div>
@@ -269,15 +262,15 @@ export default function Wizard({ onCancel, onProjectCreated }) {
           {step === 3 && (
             <div className="space-y-6">
               <div>
-                <h2 className="text-xl font-bold text-on-surface mb-1">Define System Features</h2>
-                <p className="text-on-surface-variant text-sm">List the main functional modules or features the AI should analyze.</p>
+                <h2 className="text-lg font-bold text-[#171717] mb-1 tracking-tight">Define System Features</h2>
+                <p className="text-slate-500 text-xs">List the main functional modules or features the AI should analyze.</p>
               </div>
 
               <div className="space-y-4 pt-2">
                 <div className="flex gap-2">
                   <input
-                    className="flex-1 bg-surface-container-low border border-outline-variant rounded px-3 py-2 text-on-surface font-medium focus:outline-none focus:ring-2 focus:ring-primary"
-                    placeholder="Type feature name (e.g. Invoice Billing) and press Add"
+                    className="flex-1 bg-white text-[#171717] text-[16px] px-3 py-2 rounded shadow-vercel-input focus:outline-none focus:shadow-vercel-input-focus transition-all duration-200 placeholder-slate-400"
+                    placeholder="Type feature name (e.g. Invoice Billing) and press Enter…"
                     type="text"
                     value={featureInput}
                     onChange={(e) => setFeatureInput(e.target.value)}
@@ -285,7 +278,7 @@ export default function Wizard({ onCancel, onProjectCreated }) {
                   />
                   <button
                     onClick={() => addTag(featureInput, features, setFeatures, setFeatureInput, 12, 'features')}
-                    className="bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold px-4 rounded"
+                    className="bg-[#171717] hover:bg-[#333333] text-white text-xs font-semibold px-4 rounded-lg shadow-sm transition-colors"
                   >
                     Add
                   </button>
@@ -293,15 +286,15 @@ export default function Wizard({ onCancel, onProjectCreated }) {
 
                 <div className="flex flex-wrap gap-2 pt-2">
                   {features.map(feat => (
-                    <span key={feat} className="bg-[#eeefff] border border-blue-100 text-[#004ac6] text-xs font-semibold px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm">
+                    <span key={feat} className="bg-slate-50 text-[#0a72ef] text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-vercel-border">
                       {feat}
-                      <button onClick={() => removeTag(feat, features, setFeatures)} className="text-blue-400 hover:text-blue-600 focus:outline-none">
-                        <span className="material-symbols-outlined text-[14px] font-bold">close</span>
+                      <button onClick={() => removeTag(feat, features, setFeatures)} className="text-slate-400 hover:text-slate-600 focus:outline-none">
+                        <span className="material-symbols-outlined text-[13px] font-bold">close</span>
                       </button>
                     </span>
                   ))}
                   {features.length === 0 && (
-                    <p className="text-xs text-on-surface-variant italic">No features defined yet. Add at least one.</p>
+                    <p className="text-xs text-slate-400 italic">No features defined yet. Add at least one.</p>
                   )}
                 </div>
               </div>
@@ -312,15 +305,15 @@ export default function Wizard({ onCancel, onProjectCreated }) {
           {step === 4 && (
             <div className="space-y-6">
               <div>
-                <h2 className="text-xl font-bold text-on-surface mb-1">Core Database Entities</h2>
-                <p className="text-on-surface-variant text-sm">Identify the primary tables or entities of your database.</p>
+                <h2 className="text-lg font-bold text-[#171717] mb-1 tracking-tight">Core Database Entities</h2>
+                <p className="text-slate-500 text-xs">Identify the primary tables or entities of your database.</p>
               </div>
 
               <div className="space-y-4 pt-2">
                 <div className="flex gap-2">
                   <input
-                    className="flex-1 bg-surface-container-low border border-outline-variant rounded px-3 py-2 text-on-surface font-medium focus:outline-none focus:ring-2 focus:ring-primary"
-                    placeholder="Type entity name (e.g. Invoice) and press Add"
+                    className="flex-1 bg-white text-[#171717] text-[16px] px-3 py-2 rounded shadow-vercel-input focus:outline-none focus:shadow-vercel-input-focus transition-all duration-200 placeholder-slate-400"
+                    placeholder="Type entity name (e.g. Invoice) and press Enter…"
                     type="text"
                     value={entityInput}
                     onChange={(e) => setEntityInput(e.target.value)}
@@ -328,7 +321,7 @@ export default function Wizard({ onCancel, onProjectCreated }) {
                   />
                   <button
                     onClick={() => addTag(entityInput, entities, setEntities, setEntityInput, 15, 'entities')}
-                    className="bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold px-4 rounded"
+                    className="bg-[#171717] hover:bg-[#333333] text-white text-xs font-semibold px-4 rounded-lg shadow-sm transition-colors"
                   >
                     Add
                   </button>
@@ -336,15 +329,15 @@ export default function Wizard({ onCancel, onProjectCreated }) {
 
                 <div className="flex flex-wrap gap-2 pt-2">
                   {entities.map(ent => (
-                    <span key={ent} className="bg-slate-100 border border-slate-200 text-slate-800 text-xs font-semibold px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm">
+                    <span key={ent} className="bg-slate-50 text-[#171717] text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-vercel-border">
                       {ent}
                       <button onClick={() => removeTag(ent, entities, setEntities)} className="text-slate-400 hover:text-slate-600 focus:outline-none">
-                        <span className="material-symbols-outlined text-[14px] font-bold">close</span>
+                        <span className="material-symbols-outlined text-[13px] font-bold">close</span>
                       </button>
                     </span>
                   ))}
                   {entities.length === 0 && (
-                    <p className="text-xs text-on-surface-variant italic">No entities defined yet. Add at least one.</p>
+                    <p className="text-xs text-slate-400 italic">No entities defined yet. Add at least one.</p>
                   )}
                 </div>
               </div>
@@ -356,7 +349,7 @@ export default function Wizard({ onCancel, onProjectCreated }) {
         <div className="flex justify-between items-center mt-8">
           <button
             onClick={step === 1 ? onCancel : handleBack}
-            className="text-sm font-semibold text-secondary hover:text-on-surface transition-colors py-2 px-4 border border-outline-variant rounded"
+            className="text-xs font-semibold text-slate-500 hover:text-black transition-colors py-2 px-3 border border-transparent shadow-vercel-border rounded-lg bg-white"
             disabled={loading}
           >
             {step === 1 ? 'Cancel' : 'Back'}
@@ -365,19 +358,19 @@ export default function Wizard({ onCancel, onProjectCreated }) {
           {step < 4 ? (
             <button
               onClick={handleNext}
-              className="bg-slate-800 hover:bg-slate-900 text-white text-sm font-semibold py-2 px-5 rounded flex items-center gap-1.5 shadow-sm transition-colors"
+              className="bg-[#171717] hover:bg-[#333333] text-white text-xs font-semibold py-2.5 px-4 rounded-lg flex items-center gap-1.5 shadow-sm transition-colors uppercase tracking-wider"
             >
               Next Step
-              <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+              <span className="material-symbols-outlined text-[15px]">arrow_forward</span>
             </button>
           ) : (
             <button
               onClick={handleSubmit}
-              className="bg-[#2563eb] hover:bg-[#004ac6] text-white text-sm font-semibold py-2.5 px-6 rounded flex items-center gap-2 shadow-sm transition-colors disabled:opacity-50"
+              className="bg-[#171717] hover:bg-[#333333] text-white text-xs font-semibold py-2.5 px-5 rounded-lg flex items-center gap-2 shadow-sm transition-colors disabled:opacity-50 uppercase tracking-wider"
               disabled={loading || actors.length === 0 || features.length === 0 || entities.length === 0}
             >
-              {loading ? 'Creating Project...' : 'Finish & Submit'}
-              <span className="material-symbols-outlined text-[18px]">magic_button</span>
+              {loading ? 'Creating Project…' : 'Finish & Submit'}
+              <span className="material-symbols-outlined text-[16px]">magic_button</span>
             </button>
           )}
         </div>
