@@ -20,7 +20,7 @@ function streamToBuffer(stream) {
   });
 }
 
-// Generate and get diagrams URLs
+// Generate and get diagrams URLs (supports optional ?type=er|class|usecase query param)
 router.get('/:id/diagrams', async (req, res) => {
   try {
     const { data: spec, error } = await supabase
@@ -51,7 +51,58 @@ router.get('/:id/diagrams', async (req, res) => {
       });
     }
 
+    const type = req.query.type; // er, class, usecase
     const master = spec.masterJson;
+
+    if (type) {
+      if (!['er', 'class', 'usecase'].includes(type)) {
+        return res.status(400).json({ error: 'Invalid diagram type' });
+      }
+
+      if (!master.diagrams || typeof master.diagrams !== 'object') {
+        master.diagrams = {};
+      }
+
+      // Check if this specific diagram is cached
+      if (master.diagrams[type] && typeof master.diagrams[type] === 'object') {
+        return res.json({
+          success: true,
+          diagram: master.diagrams[type]
+        });
+      }
+
+      // Generate only the requested diagram
+      let puml;
+      if (type === 'er') {
+        puml = await generateErPuml(master.entities, master.attributes, master.relationships);
+      } else if (type === 'class') {
+        puml = await generateClassPuml(master.entities, master.attributes, master.relationships);
+      } else if (type === 'usecase') {
+        puml = await generateUseCasePuml(master.actors, master.features);
+      }
+
+      master.diagrams[type] = {
+        plantuml: puml,
+        url: encodePumlToUrl(puml)
+      };
+
+      const { error: updateError } = await supabase
+        .from('specifications')
+        .update({
+          masterJson: master,
+          updatedAt: new Date().toISOString()
+        })
+        .eq('id', spec.id);
+
+      if (updateError) {
+        console.error(`Failed to cache ${type} diagram in specifications:`, updateError);
+      }
+
+      return res.json({
+        success: true,
+        diagram: master.diagrams[type]
+      });
+    }
 
     // Return cached diagrams if they exist
     if (master.diagrams && typeof master.diagrams === 'object') {
@@ -61,12 +112,10 @@ router.get('/:id/diagrams', async (req, res) => {
       });
     }
 
-    // Generate PlantUML syntaxes via AI and encode them in parallel
-    const [ucPuml, erPuml, classPuml] = await Promise.all([
-      generateUseCasePuml(master.actors, master.features),
-      generateErPuml(master.entities, master.attributes, master.relationships),
-      generateClassPuml(master.entities, master.attributes, master.relationships)
-    ]);
+    // Generate PlantUML syntaxes via AI sequentially to avoid concurrent rate limits
+    const ucPuml = await generateUseCasePuml(master.actors, master.features);
+    const erPuml = await generateErPuml(master.entities, master.attributes, master.relationships);
+    const classPuml = await generateClassPuml(master.entities, master.attributes, master.relationships);
 
     const diagrams = {
       usecase: {
@@ -149,11 +198,10 @@ router.get('/:id/srs', async (req, res) => {
       const domain = master.project.domain;
       const complexity = master.project.complexity;
 
-      const [core, nfr, overview] = await Promise.all([
-        generateSrsCore(projectName, description, master.actors, master.features),
-        generateSrsNfr(domain, complexity),
-        generateSrsOverview(projectName)
-      ]);
+      // Generate SRS sections sequentially to avoid concurrent rate limits
+      const core = await generateSrsCore(projectName, description, master.actors, master.features);
+      const nfr = await generateSrsNfr(domain, complexity);
+      const overview = await generateSrsOverview(projectName);
 
       markdown = assembleSrs(projectName, core, nfr, overview);
 
@@ -181,16 +229,18 @@ router.get('/:id/srs', async (req, res) => {
     } else if (format === 'pdf') {
       const filePath = `srs_${spec.id}.pdf`;
 
-      // Check if PDF already exists in Supabase Storage
-      const { data: fileData, error: downloadError } = await supabase.storage
-        .from('srs-documents')
-        .download(filePath);
+      // Only read from storage if the specification already had a cached markdown (i.e. we didn't just regenerate it)
+      if (spec.srsMarkdown) {
+        const { data: fileData, error: downloadError } = await supabase.storage
+          .from('srs-documents')
+          .download(filePath);
 
-      if (fileData && !downloadError) {
-        const buffer = Buffer.from(await fileData.arrayBuffer());
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `attachment; filename="srs_${spec.id}.pdf"`);
-        return res.send(buffer);
+        if (fileData && !downloadError) {
+          const buffer = Buffer.from(await fileData.arrayBuffer());
+          res.setHeader('Content-Type', 'application/pdf');
+          res.setHeader('Content-Disposition', `attachment; filename="srs_${spec.id}.pdf"`);
+          return res.send(buffer);
+        }
       }
 
       // Compile on-the-fly and upload to Supabase Storage if not exists

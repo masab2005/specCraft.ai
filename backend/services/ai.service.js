@@ -1,4 +1,4 @@
-import { llm } from '../ai/llmClient.js';
+import { DEFAULT_MODEL, createChatCompletionWithRetry } from '../ai/llmClient.js';
 
 function parseJSONFromResponse(text) {
   let cleanText = text.trim();
@@ -33,8 +33,8 @@ EXAMPLE FORMAT (FOLLOW EXACTLY):
 NOW GENERATE:
 `;
 
-  const response = await llm.chat.completions.create({
-    model: "qwen2.5-3b-instruct",
+  const response = await createChatCompletionWithRetry({
+    model: DEFAULT_MODEL,
     temperature: 0.2,
     messages: [
       {
@@ -87,8 +87,8 @@ EXAMPLE FORMAT (FOLLOW EXACTLY):
 NOW GENERATE:
 `;
 
-  const response = await llm.chat.completions.create({
-    model: "qwen2.5-3b-instruct",
+  const response = await createChatCompletionWithRetry({
+    model: DEFAULT_MODEL,
     temperature: 0.2,
     messages: [
       {

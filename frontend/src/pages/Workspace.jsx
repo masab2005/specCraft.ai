@@ -53,13 +53,30 @@ export default function Workspace({ project, onBack, onGoToArtifacts }) {
           setNewRelSource(project.entities[0]);
           setNewRelTarget(project.entities[0]);
         }
+        setLoading(false);
       } else {
-        setSpecification(null);
+        // Automatically trigger specification generation!
+        setGenLoading(true);
+        try {
+          const genData = await api.generateSpecification(project.id);
+          setSpecification(genData.specification);
+          setEditedAttributes(genData.specification.masterJson.attributes || {});
+          setEditedRelationships(genData.specification.masterJson.relationships || []);
+          if (project.entities?.length > 0) {
+            setNewRelSource(project.entities[0]);
+            setNewRelTarget(project.entities[0]);
+          }
+        } catch (genErr) {
+          console.error(genErr);
+          setError(genErr.message || 'Auto-generation of specification model failed.');
+        } finally {
+          setGenLoading(false);
+          setLoading(false);
+        }
       }
     } catch (err) {
       console.error(err);
       setError('Failed to load project details.');
-    } finally {
       setLoading(false);
     }
   };
@@ -106,8 +123,8 @@ export default function Workspace({ project, onBack, onGoToArtifacts }) {
       return;
     }
 
-    if (currentAttrs.length >= 10) {
-      setError(`Maximum of 10 attributes allowed per entity to ensure AI model stability.`);
+    if (currentAttrs.length >= 15) {
+      setError(`Maximum of 15 attributes allowed per entity to ensure AI model stability.`);
       return;
     }
 
@@ -193,6 +210,39 @@ export default function Workspace({ project, onBack, onGoToArtifacts }) {
     }
   };
 
+  if (loading || genLoading) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col font-sans">
+        {/* Header bar */}
+        <header className="bg-white border-b border-outline-variant h-16 flex items-center justify-between px-6 md:px-12 sticky top-0 z-10">
+          <div className="flex items-center gap-4">
+            <button onClick={onBack} className="text-secondary hover:text-on-surface transition-colors flex items-center gap-1">
+              <span className="material-symbols-outlined text-[20px]">arrow_back</span>
+              Back to Dashboard
+            </button>
+            <div className="h-6 w-px bg-outline-variant" />
+            <span className="font-semibold text-lg text-on-surface tracking-tight">{project.name}</span>
+          </div>
+        </header>
+        
+        <main className="flex-1 flex flex-col justify-center items-center py-20 gap-6">
+          <div className="w-16 h-16 bg-slate-50 border border-outline-variant rounded-full flex items-center justify-center text-[#7C3AED] relative">
+            <div className="absolute inset-0 rounded-full border-4 border-t-[#7C3AED] border-slate-100 animate-spin"></div>
+            <span className="material-symbols-outlined text-[28px] animate-pulse">psychology</span>
+          </div>
+          <div className="text-center max-w-sm px-4">
+            <h3 className="font-bold text-on-surface text-base">
+              {genLoading ? "Generating Base Data Model..." : "Loading Workspace Details..."}
+            </h3>
+            <p className="text-xs text-on-surface-variant mt-2 leading-relaxed">
+              Our AI models are designing database schemas, identifying attributes, and analyzing relationships based on your wizard input. This might take 5-10 seconds.
+            </p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background flex flex-col font-sans">
       {/* Header bar */}
@@ -263,28 +313,22 @@ export default function Workspace({ project, onBack, onGoToArtifacts }) {
           </div>
         )}
 
-        {loading ? (
-          <div className="flex flex-col justify-center items-center py-20 gap-3">
-            <div className="w-10 h-10 border-4 border-slate-300 border-t-slate-800 rounded-full animate-spin"></div>
-            <p className="text-sm text-on-surface-variant">Loading workspace details...</p>
-          </div>
-        ) : !specification ? (
-          /* Empty / Ungenerated Specification state */
-          <div className="bg-white border border-outline-variant rounded-xl p-12 text-center max-w-xl mx-auto mt-10">
-            <div className="w-16 h-16 bg-slate-50 border border-outline-variant rounded-full flex items-center justify-center mx-auto mb-6 text-[#7C3AED]">
-              <span className="material-symbols-outlined text-[36px]">psychology</span>
+        {!specification ? (
+          /* Failed to generate state - show retry options */
+          <div className="bg-white border border-outline-variant rounded-xl p-12 text-center max-w-xl mx-auto mt-10 shadow-sm animate-fade-in">
+            <div className="w-16 h-16 bg-red-50 border border-red-100 rounded-full flex items-center justify-center mx-auto mb-6 text-red-600">
+              <span className="material-symbols-outlined text-[36px]">error</span>
             </div>
-            <h3 className="text-lg font-semibold text-on-surface mb-2">No data model generated yet</h3>
+            <h3 className="text-lg font-semibold text-on-surface mb-2">Generation Failed</h3>
             <p className="text-on-surface-variant text-sm mb-6 max-w-md mx-auto">
-              Ready to analyze your inputs? We will run our AI models to design database schemas, attributes, and relationships. Once generated, you can refine this base model before approving the final SRS and UML diagram artifacts.
+              Something went wrong while communicating with our AI models. Ready to retry generating your schemas, attributes, and relationships?
             </p>
             <button
               onClick={handleGenerate}
-              disabled={genLoading}
-              className="bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-semibold text-sm py-2.5 px-6 rounded inline-flex items-center gap-2 transition-colors disabled:opacity-50"
+              className="bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-semibold text-sm py-2.5 px-6 rounded inline-flex items-center gap-2 transition-colors shadow-sm"
             >
-              {genLoading ? 'Analyzing & Designing...' : 'Generate Base Model'}
-              <span className="material-symbols-outlined text-[18px]">magic_button</span>
+              Retry Generation
+              <span className="material-symbols-outlined text-[18px]">refresh</span>
             </button>
           </div>
         ) : (

@@ -79,10 +79,8 @@ function validateAndCleanMasterJson(projectEntities, masterJson) {
 
 // Helper to run specification generation
 async function generateAndSaveSpec(project) {
-  const [attributes, relationships] = await Promise.all([
-    generateAttributes(project.entities, project.description, project.name),
-    generateRelationships(project.entities, project.description)
-  ]);
+  const attributes = await generateAttributes(project.entities, project.description, project.name);
+  const relationships = await generateRelationships(project.entities, project.description);
 
   let masterJson = {
     project: {

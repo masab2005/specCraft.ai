@@ -146,6 +146,16 @@ export const api = {
     return data;
   },
 
+  async getDiagram(specId, type) {
+    const res = await fetch(`${BASE_URL}/api/artifacts/${specId}/diagrams?type=${type}`, {
+      method: 'GET',
+      headers: getHeaders()
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `Failed to fetch ${type} diagram`);
+    return data;
+  },
+
   async getSrsMarkdown(specId) {
     const res = await fetch(`${BASE_URL}/api/artifacts/${specId}/srs?format=markdown`, {
       method: 'GET',

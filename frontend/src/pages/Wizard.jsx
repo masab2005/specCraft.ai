@@ -238,10 +238,10 @@ export default function Wizard({ onCancel, onProjectCreated }) {
                     type="text"
                     value={actorInput}
                     onChange={(e) => setActorInput(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && addTag(actorInput, actors, setActors, setActorInput, 4, 'actors')}
+                    onKeyDown={(e) => e.key === 'Enter' && addTag(actorInput, actors, setActors, setActorInput, 8, 'actors')}
                   />
                   <button
-                    onClick={() => addTag(actorInput, actors, setActors, setActorInput, 4, 'actors')}
+                    onClick={() => addTag(actorInput, actors, setActors, setActorInput, 8, 'actors')}
                     className="bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold px-4 rounded"
                   >
                     Add
@@ -281,10 +281,10 @@ export default function Wizard({ onCancel, onProjectCreated }) {
                     type="text"
                     value={featureInput}
                     onChange={(e) => setFeatureInput(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && addTag(featureInput, features, setFeatures, setFeatureInput, 6, 'features')}
+                    onKeyDown={(e) => e.key === 'Enter' && addTag(featureInput, features, setFeatures, setFeatureInput, 12, 'features')}
                   />
                   <button
-                    onClick={() => addTag(featureInput, features, setFeatures, setFeatureInput, 6, 'features')}
+                    onClick={() => addTag(featureInput, features, setFeatures, setFeatureInput, 12, 'features')}
                     className="bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold px-4 rounded"
                   >
                     Add
@@ -324,10 +324,10 @@ export default function Wizard({ onCancel, onProjectCreated }) {
                     type="text"
                     value={entityInput}
                     onChange={(e) => setEntityInput(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && addTag(entityInput, entities, setEntities, setEntityInput, 8, 'entities')}
+                    onKeyDown={(e) => e.key === 'Enter' && addTag(entityInput, entities, setEntities, setEntityInput, 15, 'entities')}
                   />
                   <button
-                    onClick={() => addTag(entityInput, entities, setEntities, setEntityInput, 8, 'entities')}
+                    onClick={() => addTag(entityInput, entities, setEntities, setEntityInput, 15, 'entities')}
                     className="bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold px-4 rounded"
                   >
                     Add
