@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
 
 @tailwind base;
@@ -8,30 +8,25 @@
 body {
   margin: 0;
   background-color: #ffffff;
-  color: #171717;
-  font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  color: #0a1317;
+  font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 @layer utilities {
-  .shadow-vercel-border {
-    box-shadow: 0px 0px 0px 1px rgba(0, 0, 0, 0.08);
+  /* Hairline and soft boundaries */
+  .border-hairline {
+    border-color: #ced0d4;
   }
-  .shadow-vercel-border-hover {
-    box-shadow: 0px 0px 0px 1px rgba(0, 0, 0, 0.16);
+  .border-hairline-soft {
+    border-color: #dee3e9;
   }
-  .shadow-vercel-card {
-    box-shadow: 0px 0px 0px 1px rgba(0, 0, 0, 0.08), 0px 2px 2px rgba(0, 0, 0, 0.04);
-  }
-  .shadow-vercel-card-hover {
-    box-shadow: 0px 0px 0px 1px rgba(0, 0, 0, 0.16), 0px 8px 16px rgba(0, 0, 0, 0.08);
-  }
-  .shadow-vercel-input {
-    box-shadow: 0px 0px 0px 1px rgba(0, 0, 0, 0.08), 0px 1px 2px rgba(0, 0, 0, 0.02);
-  }
-  .shadow-vercel-input-focus {
-    box-shadow: 0px 0px 0px 1px #0a72ef, 0px 0px 0px 4px rgba(10, 114, 239, 0.15);
+  
+  /* Form transitions & shadow highlights */
+  .focus-ring-fb:focus {
+    border-color: #1876f2;
+    box-shadow: 0 0 0 2px rgba(24, 118, 242, 0.15);
   }
 }
 
@@ -39,22 +34,23 @@ html.dark {
   color-scheme: dark;
 }
 html.dark body {
-  background-color: #0a0a0a;
-  color: #ffffff;
+  background-color: #0a1317;
+  color: #f1f4f7;
 }
-/* In dark mode, tweak vercel shadows to be subtle dark rings instead of black shadows */
-html.dark .shadow-vercel-border {
-  box-shadow: 0px 0px 0px 1px rgba(255, 255, 255, 0.15);
+
+/* Custom scrollbars matching clean OS details */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
 }
-html.dark .shadow-vercel-border-hover {
-  box-shadow: 0px 0px 0px 1px rgba(255, 255, 255, 0.25);
+::-webkit-scrollbar-track {
+  background: transparent;
 }
-html.dark .shadow-vercel-card {
-  box-shadow: 0px 0px 0px 1px rgba(255, 255, 255, 0.15), 0px 2px 4px rgba(0, 0, 0, 0.4);
+::-webkit-scrollbar-thumb {
+  background: #ced0d4;
+  border-radius: 4px;
 }
-html.dark .shadow-vercel-card-hover {
-  box-shadow: 0px 0px 0px 1px rgba(255, 255, 255, 0.25), 0px 8px 16px rgba(0, 0, 0, 0.5);
+html.dark ::-webkit-scrollbar-thumb {
+  background: #444950;
 }
-html.dark .shadow-vercel-input {
-  box-shadow: 0px 0px 0px 1px rgba(255, 255, 255, 0.15);
-}
+

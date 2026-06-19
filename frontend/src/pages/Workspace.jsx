@@ -200,26 +200,29 @@ export default function Workspace({ project, onBack, onGoToArtifacts, theme, tog
 
   if (loading || genLoading) {
     return (
-      <div className="min-h-screen bg-white dark:bg-[#0a0a0a] flex flex-col font-sans antialiased text-[#171717] dark:text-white">
+      <div className="min-h-screen bg-white dark:bg-[#0a1317] flex flex-col font-sans antialiased text-[#0a1317] dark:text-[#f1f4f7]">
         {/* Header bar */}
-        <header className="bg-white dark:bg-[#0a0a0a] shadow-vercel-border h-16 flex items-center justify-between px-6 md:px-12 sticky top-0 z-10">
+        <header className="bg-white dark:bg-[#0a1317] border-b border-[#dee3e9] dark:border-[#ced0d4]/10 h-16 flex items-center justify-between px-6 md:px-12 sticky top-0 z-10">
           <div className="flex items-center gap-2">
-            <button onClick={onBack} className="text-slate-500 hover:text-black dark:text-slate-400 dark:hover:text-white transition-colors flex items-center gap-1.5 text-xs font-semibold">
-              <span className="material-symbols-outlined text-[18px]">arrow_back</span>
-              Back to Dashboard
+            <button 
+              onClick={onBack} 
+              className="text-[10px] font-bold uppercase tracking-wider text-slate-500 hover:text-black dark:text-slate-400 dark:hover:text-white transition-colors flex items-center gap-1.5 border border-[#ced0d4] dark:border-[#ced0d4]/15 px-3 py-2 rounded-full bg-white dark:bg-[#1c1e21]"
+            >
+              <span className="material-symbols-outlined text-[16px]">arrow_back</span>
+              Back
             </button>
-            <div className="h-4 w-[1px] bg-slate-200 dark:bg-zinc-800" />
-            <span className="font-bold text-sm text-[#171717] dark:text-white tracking-tight">{project.name}</span>
+            <div className="h-4 w-[1px] bg-[#dee3e9] dark:bg-[#ced0d4]/10 mx-2" />
+            <span className="font-bold text-sm text-[#0a1317] dark:text-white tracking-tight">{project.name}</span>
           </div>
         </header>
         
         <main className="flex-1 flex flex-col justify-center items-center py-20 gap-6">
-          <div className="w-12 h-12 border-2 border-[#171717] dark:border-white border-t-transparent dark:border-t-transparent rounded-full animate-spin" />
+          <div className="w-12 h-12 border-2 border-[#0064e0] dark:border-white border-t-transparent dark:border-t-transparent rounded-full animate-spin" />
           <div className="text-center max-w-sm px-4">
-            <h3 className="font-bold text-[#171717] dark:text-white text-base tracking-tight">
+            <h3 className="font-bold text-[#0a1317] dark:text-white text-base tracking-tight">
               {genLoading ? "Generating Base Data Model…" : "Loading Workspace Details…"}
             </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
+            <p className="text-xs text-slate-505 text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
               Our AI models are designing database schemas, identifying attributes, and analyzing relationships based on your wizard input. This might take 5-10 seconds.
             </p>
           </div>
@@ -229,24 +232,27 @@ export default function Workspace({ project, onBack, onGoToArtifacts, theme, tog
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-[#0a0a0a] flex flex-col font-sans antialiased text-[#171717] dark:text-white">
+    <div className="min-h-screen bg-white dark:bg-[#0a1317] flex flex-col font-sans antialiased text-[#0a1317] dark:text-[#f1f4f7]">
       {/* Header bar */}
-      <header className="bg-white dark:bg-[#0a0a0a] shadow-vercel-border h-16 flex items-center justify-between px-6 md:px-12 sticky top-0 z-10">
+      <header className="bg-white dark:bg-[#0a1317] border-b border-[#dee3e9] dark:border-[#ced0d4]/10 h-16 flex items-center justify-between px-6 md:px-12 sticky top-0 z-10">
         <div className="flex items-center gap-2">
-          <button onClick={onBack} className="text-slate-500 hover:text-black dark:text-slate-400 dark:hover:text-white transition-colors flex items-center gap-1.5 text-xs font-semibold">
-            <span className="material-symbols-outlined text-[18px]">arrow_back</span>
-            Back to Dashboard
+          <button 
+            onClick={onBack} 
+            className="text-[10px] font-bold uppercase tracking-wider text-slate-500 hover:text-black dark:text-slate-400 dark:hover:text-white transition-colors flex items-center gap-1 border border-[#ced0d4] dark:border-[#ced0d4]/15 px-3 py-2 rounded-full bg-white dark:bg-[#1c1e21]"
+          >
+            <span className="material-symbols-outlined text-[16px]">arrow_back</span>
+            Back
           </button>
-          <div className="h-4 w-[1px] bg-slate-200 dark:bg-zinc-800" />
-          <span className="font-bold text-sm text-[#171717] dark:text-white tracking-tight">{project.name}</span>
+          <div className="h-4 w-[1px] bg-[#dee3e9] dark:bg-[#ced0d4]/10 mx-2" />
+          <span className="font-bold text-sm text-[#0a1317] dark:text-white tracking-tight">{project.name}</span>
         </div>
 
         {specification && (
           <div className="flex items-center gap-3">
-            <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${
+            <span className={`text-[9px] font-bold px-2.5 py-0.5 rounded-full border uppercase tracking-wider ${
               specification.approvalStatus === 'approved' 
-                ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 shadow-vercel-border' 
-                : 'bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 shadow-vercel-border'
+                ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-[#31a24c] border-emerald-500/20' 
+                : 'bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-[#f2a918] border-amber-500/20'
             }`}>
               {specification.approvalStatus}
             </span>
@@ -254,7 +260,7 @@ export default function Workspace({ project, onBack, onGoToArtifacts, theme, tog
             {/* Theme Toggle Button */}
             <button 
               onClick={toggleTheme}
-              className="text-slate-500 hover:text-black dark:text-slate-400 dark:hover:text-white transition-colors flex items-center justify-center p-2 rounded-lg shadow-vercel-border bg-white dark:bg-[#171717]"
+              className="text-slate-500 hover:text-black dark:text-slate-400 dark:hover:text-white transition-colors flex items-center justify-center p-2 rounded-full border border-[#ced0d4] dark:border-[#ced0d4]/15 bg-white dark:bg-[#1c1e21]"
               title="Toggle Theme"
             >
               <span className="material-symbols-outlined text-[16px]">
@@ -265,7 +271,7 @@ export default function Workspace({ project, onBack, onGoToArtifacts, theme, tog
             {specification.approvalStatus === 'approved' ? (
               <button
                 onClick={() => onGoToArtifacts(specification)}
-                className="bg-[#171717] dark:bg-white text-white dark:text-black hover:bg-[#333333] dark:hover:bg-slate-200 text-xs font-semibold py-2 px-3.5 rounded-lg flex items-center gap-1 transition-colors uppercase tracking-wider"
+                className="bg-[#0064e0] hover:bg-[#0457cb] text-white text-[10px] font-bold py-2.5 px-4 rounded-full flex items-center gap-1 transition-colors uppercase tracking-wider"
               >
                 Go to Artifacts
                 <span className="material-symbols-outlined text-[15px]">arrow_forward</span>
@@ -274,9 +280,9 @@ export default function Workspace({ project, onBack, onGoToArtifacts, theme, tog
               <button
                 onClick={handleApprove}
                 disabled={approveLoading || hasChanges}
-                className="bg-[#171717] dark:bg-white text-white dark:text-black hover:bg-[#333333] dark:hover:bg-slate-200 text-xs font-semibold py-2 px-3.5 rounded-lg flex items-center gap-1 transition-colors disabled:opacity-50 uppercase tracking-wider"
+                className="bg-[#0064e0] hover:bg-[#0457cb] text-white text-[10px] font-bold py-2.5 px-4 rounded-full flex items-center gap-1.5 transition-colors disabled:opacity-50 uppercase tracking-wider"
               >
-                {approveLoading ? 'Approving…' : 'Approve Specification'}
+                {approveLoading ? 'Approving…' : 'Approve Spec'}
                 <span className="material-symbols-outlined text-[15px]">verified</span>
               </button>
             )}
@@ -287,22 +293,22 @@ export default function Workspace({ project, onBack, onGoToArtifacts, theme, tog
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-6 md:px-12 py-10 flex flex-col justify-start">
         {error && (
-          <div className="bg-red-50/50 text-red-700 p-3 rounded-lg mb-8 text-sm flex items-center gap-2 shadow-vercel-border">
-            <span className="material-symbols-outlined text-red-500 text-[18px]">error</span>
+          <div className="bg-red-50/50 dark:bg-red-950/20 text-[#e41e3f] dark:text-red-400 p-3 rounded-lg mb-8 text-xs flex items-center gap-2 border border-[#e41e3f]/20">
+            <span className="material-symbols-outlined text-[#e41e3f] text-[18px]">error</span>
             <span>{error}</span>
           </div>
         )}
 
         {hasChanges && (
-          <div className="bg-slate-50 dark:bg-zinc-900 text-slate-800 dark:text-slate-200 p-4 rounded-xl mb-8 text-xs flex justify-between items-center shadow-vercel-card">
+          <div className="bg-[#0064e0]/5 border border-[#0091ff]/30 text-[#0064e0] dark:text-[#0091ff] p-4 rounded-xl mb-8 text-xs flex justify-between items-center shadow-sm">
             <div className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-[#0a72ef] text-[18px]">info</span>
+              <span className="material-symbols-outlined text-[#0064e0] text-[18px]">info</span>
               <span>You have unsaved manual edits. Click Save to apply validation and cache resets.</span>
             </div>
             <button
               onClick={handleSave}
               disabled={saveLoading}
-              className="bg-[#171717] dark:bg-white text-white dark:text-black hover:bg-[#333333] dark:hover:bg-slate-200 font-semibold text-xs py-1.5 px-3 rounded-lg flex items-center gap-1 transition-colors uppercase tracking-wider"
+              className="bg-[#0064e0] hover:bg-[#0457cb] text-white font-bold text-[10px] py-2 px-4 rounded-full flex items-center gap-1 transition-colors uppercase tracking-wider shadow-sm"
             >
               {saveLoading ? 'Saving…' : 'Save Changes'}
             </button>
@@ -310,18 +316,18 @@ export default function Workspace({ project, onBack, onGoToArtifacts, theme, tog
         )}
 
         {!specification ? (
-          /* Failed to generate state - show retry options */
-          <div className="bg-white dark:bg-[#171717] shadow-vercel-card rounded-xl p-12 text-center max-w-xl mx-auto mt-10 animate-fade-in">
-            <div className="w-14 h-14 bg-red-50 dark:bg-zinc-800 shadow-vercel-border rounded-full flex items-center justify-center mx-auto mb-6 text-[#ff5b4f]">
+          /* Failed to generate state - show retry options (card-product-feature style) */
+          <div className="bg-white dark:bg-[#1c1e21] border border-[#dee3e9] dark:border-[#ced0d4]/10 rounded-xxxl p-12 text-center max-w-xl mx-auto mt-10 animate-fade-in">
+            <div className="w-14 h-14 bg-red-50 dark:bg-red-950/20 border border-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6 text-[#e41e3f]">
               <span className="material-symbols-outlined text-[28px]">error</span>
             </div>
-            <h3 className="text-base font-bold text-[#171717] dark:text-white mb-2 tracking-tight">Generation Failed</h3>
-            <p className="text-slate-500 dark:text-slate-400 text-xs mb-6 max-w-md mx-auto leading-relaxed">
+            <h3 className="text-base font-bold text-[#0a1317] dark:text-white mb-2 tracking-tight">Generation Failed</h3>
+            <p className="text-slate-550 dark:text-slate-400 text-xs mb-6 max-w-md mx-auto leading-relaxed">
               Something went wrong while communicating with our AI models. Ready to retry generating your schemas, attributes, and relationships?
             </p>
             <button
               onClick={handleGenerate}
-              className="bg-[#171717] dark:bg-white text-white dark:text-black hover:bg-[#333333] dark:hover:bg-slate-200 font-semibold text-xs py-2.5 px-5 rounded-lg inline-flex items-center gap-2 transition-colors uppercase tracking-wider shadow-sm"
+              className="bg-[#0064e0] hover:bg-[#0457cb] text-white font-bold text-[10px] py-3 px-6 rounded-full inline-flex items-center gap-1.5 transition-colors uppercase tracking-wider shadow-sm"
             >
               Retry Generation
               <span className="material-symbols-outlined text-[15px]">refresh</span>
@@ -332,35 +338,35 @@ export default function Workspace({ project, onBack, onGoToArtifacts, theme, tog
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left side: Project Info Summary (Read only) */}
             <div className="lg:col-span-1 space-y-6">
-              <div className="bg-white dark:bg-[#171717] shadow-vercel-card rounded-xl p-6">
-                <h3 className="font-bold text-[#171717] dark:text-white mb-4 pb-2 border-b border-slate-100 dark:border-zinc-800 text-xs uppercase tracking-wider">
+              <div className="bg-white dark:bg-[#1c1e21] border border-[#dee3e9] dark:border-[#ced0d4]/10 rounded-xl p-6">
+                <h3 className="font-bold text-[#0a1317] dark:text-white mb-4 pb-2 border-b border-[#dee3e9] dark:border-[#ced0d4]/10 text-[10px] uppercase tracking-wider">
                   Project Info
                 </h3>
                 
                 <div className="space-y-4">
                   <div>
-                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Description</span>
-                    <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mt-1">{project.description}</p>
+                    <span className="text-[9px] text-[#5d6c7b] dark:text-slate-400 font-bold uppercase tracking-wider block">Description</span>
+                    <p className="text-xs text-slate-600 dark:text-slate-450 leading-relaxed mt-1">{project.description}</p>
                   </div>
                   
                   <div>
-                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Domain & Complexity</span>
-                    <p className="text-xs text-[#171717] dark:text-white mt-1">{project.domain} — {project.complexity}</p>
+                    <span className="text-[9px] text-[#5d6c7b] dark:text-slate-400 font-bold uppercase tracking-wider block">Domain & Complexity</span>
+                    <p className="text-xs text-[#0a1317] dark:text-white font-bold mt-1">{project.domain} — {project.complexity}</p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-[#171717] shadow-vercel-card rounded-xl p-6">
-                <h3 className="font-bold text-[#171717] dark:text-white mb-4 pb-2 border-b border-slate-100 dark:border-zinc-800 text-xs uppercase tracking-wider">
+              <div className="bg-white dark:bg-[#1c1e21] border border-[#dee3e9] dark:border-[#ced0d4]/10 rounded-xl p-6">
+                <h3 className="font-bold text-[#0a1317] dark:text-white mb-4 pb-2 border-b border-[#dee3e9] dark:border-[#ced0d4]/10 text-[10px] uppercase tracking-wider">
                   Wizard Parameters
                 </h3>
                 
                 <div className="space-y-4">
                   <div>
-                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-2">Actors</span>
-                    <div className="flex flex-wrap gap-1">
+                    <span className="text-[9px] text-[#5d6c7b] dark:text-slate-400 font-bold uppercase tracking-wider block mb-2">Actors</span>
+                    <div className="flex flex-wrap gap-1.5">
                       {project.actors?.map(a => (
-                        <span key={a} className="bg-slate-50 dark:bg-zinc-800 text-[#171717] dark:text-slate-300 text-[10px] font-bold px-2 py-0.5 rounded shadow-vercel-border">
+                        <span key={a} className="bg-[#f1f4f7] dark:bg-[#0a1317] text-[#0a1317] dark:text-[#f1f4f7] text-[9px] font-bold px-2.5 py-1 rounded-full border border-[#dee3e9] dark:border-transparent">
                           {a}
                         </span>
                       ))}
@@ -368,10 +374,10 @@ export default function Workspace({ project, onBack, onGoToArtifacts, theme, tog
                   </div>
 
                   <div>
-                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-2">Target Features</span>
-                    <div className="flex flex-wrap gap-1">
+                    <span className="text-[9px] text-[#5d6c7b] dark:text-slate-400 font-bold uppercase tracking-wider block mb-2">Target Features</span>
+                    <div className="flex flex-wrap gap-1.5">
                       {project.features?.map(f => (
-                        <span key={f} className="bg-slate-50 dark:bg-zinc-850 text-[#0a72ef] dark:text-blue-400 text-[10px] font-bold px-2 py-0.5 rounded shadow-vercel-border">
+                        <span key={f} className="bg-[#0064e0]/10 text-[#0064e0] text-[9px] font-bold px-2.5 py-1 rounded-full border border-[#0064e0]/10">
                           {f}
                         </span>
                       ))}
@@ -384,33 +390,33 @@ export default function Workspace({ project, onBack, onGoToArtifacts, theme, tog
             {/* Right side: Manual Editor (Interactive attributes and relationships) */}
             <div className="lg:col-span-2 space-y-6">
               {/* Attributes Editor */}
-              <div className="bg-white dark:bg-[#171717] shadow-vercel-card rounded-xl p-6">
-                <div className="flex justify-between items-center mb-4 pb-2 border-b border-slate-100 dark:border-zinc-800">
-                  <h3 className="font-bold text-[#171717] dark:text-white text-xs uppercase tracking-wider flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-[16px]">table_rows</span>
+              <div className="bg-white dark:bg-[#1c1e21] border border-[#dee3e9] dark:border-[#ced0d4]/10 rounded-xl p-6">
+                <div className="flex justify-between items-center mb-4 pb-2 border-b border-[#dee3e9] dark:border-[#ced0d4]/10">
+                  <h3 className="font-bold text-[#0a1317] dark:text-white text-[10px] uppercase tracking-wider flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-[16px] text-slate-400">table_rows</span>
                     Attributes Editor
                   </h3>
-                  <span className="text-[10px] text-slate-400 italic">Add/remove fields on entities</span>
+                  <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Fields on entities</span>
                 </div>
 
                 <div className="space-y-6">
                   {project.entities?.map(entity => (
-                    <div key={entity} className="shadow-vercel-border rounded-lg p-4 bg-slate-50/20 dark:bg-zinc-900/20">
-                      <h4 className="font-bold text-xs text-[#171717] dark:text-white mb-3 flex items-center gap-1">
+                    <div key={entity} className="border border-[#dee3e9] dark:border-[#ced0d4]/10 rounded-lg p-4 bg-[#f1f4f7]/20 dark:bg-[#0a1317]/25">
+                      <h4 className="font-bold text-xs text-[#0a1317] dark:text-white mb-3 flex items-center gap-1.5">
                         <span className="material-symbols-outlined text-[15px] text-slate-400">grid_on</span>
                         {entity}
                       </h4>
                       
                       {/* Attributes tags list */}
-                      <div className="flex flex-wrap gap-1 mb-3">
+                      <div className="flex flex-wrap gap-1.5 mb-3">
                         {(editedAttributes[entity] || []).map(attr => (
-                          <span key={attr} className="bg-white dark:bg-zinc-900 text-[#171717] dark:text-slate-200 text-xs px-2.5 py-1 rounded shadow-vercel-border flex items-center gap-1">
+                          <span key={attr} className="bg-white dark:bg-[#0a1317] text-[#0a1317] dark:text-[#f1f4f7] text-xs px-2.5 py-1 rounded-full border border-[#ced0d4] dark:border-[#ced0d4]/15 flex items-center gap-1.5">
                             {attr}
                             <button 
                               onClick={() => handleRemoveAttribute(entity, attr)}
-                              className="text-slate-400 hover:text-[#ff5b4f] font-bold ml-1 text-sm focus:outline-none"
+                              className="text-slate-400 hover:text-[#e41e3f] font-bold ml-1 text-sm focus:outline-none flex items-center"
                             >
-                              ×
+                              <span className="material-symbols-outlined text-[13px] font-bold">close</span>
                             </button>
                           </span>
                         ))}
@@ -422,7 +428,7 @@ export default function Workspace({ project, onBack, onGoToArtifacts, theme, tog
                       {/* Add attribute input */}
                       <div className="flex gap-2">
                         <input
-                          className="flex-1 bg-white dark:bg-black text-[#171717] dark:text-white text-[16px] px-2.5 py-1.5 rounded shadow-vercel-input focus:outline-none focus:shadow-vercel-input-focus transition-all duration-200 placeholder-slate-400"
+                          className="flex-1 bg-white dark:bg-[#0a1317] text-[#0a1317] dark:text-[#f1f4f7] text-sm px-3.5 py-2.5 rounded-lg border border-[#ced0d4] dark:border-[#ced0d4]/15 focus:outline-none focus:border-[#1876f2] focus:ring-2 focus:ring-[#1876f2]/15 transition-all duration-200 placeholder-slate-400"
                           placeholder={`Add field to ${entity}…`}
                           type="text"
                           value={newAttrInputs[entity] || ''}
@@ -431,7 +437,7 @@ export default function Workspace({ project, onBack, onGoToArtifacts, theme, tog
                         />
                         <button
                           onClick={() => handleAddAttribute(entity)}
-                          className="bg-[#171717] dark:bg-white text-white dark:text-black hover:bg-[#333333] dark:hover:bg-slate-200 text-[10px] font-bold px-3 rounded-lg uppercase tracking-wider shadow-sm transition-colors"
+                          className="bg-black dark:bg-white text-white dark:text-[#0a1317] hover:bg-[#444950] dark:hover:bg-[#f1f4f7] text-[10px] font-bold px-4 rounded-full uppercase tracking-wider transition-colors"
                         >
                           Add
                         </button>
@@ -442,32 +448,32 @@ export default function Workspace({ project, onBack, onGoToArtifacts, theme, tog
               </div>
 
               {/* Relationships Editor */}
-              <div className="bg-white dark:bg-[#171717] shadow-vercel-card rounded-xl p-6">
-                <div className="flex justify-between items-center mb-4 pb-2 border-b border-slate-100 dark:border-zinc-800">
-                  <h3 className="font-bold text-[#171717] dark:text-white text-xs uppercase tracking-wider flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-[16px]">family_history</span>
+              <div className="bg-white dark:bg-[#1c1e21] border border-[#dee3e9] dark:border-[#ced0d4]/10 rounded-xl p-6">
+                <div className="flex justify-between items-center mb-4 pb-2 border-b border-[#dee3e9] dark:border-[#ced0d4]/10">
+                  <h3 className="font-bold text-[#0a1317] dark:text-white text-[10px] uppercase tracking-wider flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-[16px] text-slate-400">family_history</span>
                     Relationships Editor
                   </h3>
-                  <span className="text-[10px] text-slate-400 italic">Connect entities together</span>
+                  <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Connect entities</span>
                 </div>
 
                 {/* Relationships list */}
                 <div className="space-y-3 mb-6">
                   {editedRelationships.map((rel, index) => (
-                    <div key={index} className="flex items-center justify-between bg-slate-50/50 dark:bg-zinc-900/50 shadow-vercel-border rounded-lg px-4 py-2.5 text-xs">
+                    <div key={index} className="flex items-center justify-between bg-[#f1f4f7]/25 dark:bg-[#0a1317]/25 border border-[#dee3e9] dark:border-[#ced0d4]/10 rounded-lg px-4 py-2.5 text-xs">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-bold text-[#171717] dark:text-white">{rel.source}</span>
+                        <span className="font-bold text-[#0a1317] dark:text-white">{rel.source}</span>
                         <span className="text-[10px] text-slate-400 font-mono">({rel.type})</span>
-                        <span className="text-[10px] text-[#0a72ef] dark:text-blue-400 font-semibold border-b border-dashed border-blue-200 dark:border-blue-900">
+                        <span className="text-[10px] text-[#0064e0] font-semibold border-b border-dashed border-[#0064e0]/30 pb-0.5">
                           {rel.label}
                         </span>
                         <span className="material-symbols-outlined text-[12px] text-slate-400">arrow_forward</span>
-                        <span className="font-bold text-[#171717] dark:text-white">{rel.target}</span>
+                        <span className="font-bold text-[#0a1317] dark:text-white">{rel.target}</span>
                       </div>
                       
                       <button 
                         onClick={() => handleRemoveRelationship(index)}
-                        className="text-slate-400 hover:text-[#ff5b4f] flex items-center p-1"
+                        className="text-slate-400 hover:text-[#e41e3f] flex items-center p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-[#1c1e21]"
                       >
                         <span className="material-symbols-outlined text-[16px]">delete</span>
                       </button>
@@ -482,14 +488,14 @@ export default function Workspace({ project, onBack, onGoToArtifacts, theme, tog
                 </div>
 
                 {/* Add relationship form */}
-                <div className="shadow-vercel-border rounded-lg p-4 bg-slate-50/10 dark:bg-zinc-900/10 space-y-4">
+                <div className="border border-[#dee3e9] dark:border-[#ced0d4]/10 rounded-lg p-4 bg-[#f1f4f7]/20 dark:bg-[#0a1317]/25 space-y-4">
                   <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Add New Relationship Link</h4>
                   
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div>
-                      <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Source Entity</label>
+                      <label className="block text-[9px] font-bold text-[#5d6c7b] dark:text-slate-450 uppercase tracking-wider mb-1.5">Source Entity</label>
                       <select
-                        className="w-full bg-white dark:bg-black text-[#171717] dark:text-white text-[16px] px-2.5 py-1.5 rounded shadow-vercel-input focus:outline-none focus:shadow-vercel-input-focus transition-all duration-200"
+                        className="w-full bg-white dark:bg-[#0a1317] text-[#0a1317] dark:text-[#f1f4f7] text-sm px-3.5 py-2.5 rounded-lg border border-[#ced0d4] dark:border-[#ced0d4]/15 focus:outline-none focus:border-[#1876f2] focus:ring-2 focus:ring-[#1876f2]/15 transition-all duration-200"
                         value={newRelSource}
                         onChange={(e) => setNewRelSource(e.target.value)}
                       >
@@ -498,9 +504,9 @@ export default function Workspace({ project, onBack, onGoToArtifacts, theme, tog
                     </div>
 
                     <div>
-                      <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Relationship Type</label>
+                      <label className="block text-[9px] font-bold text-[#5d6c7b] dark:text-slate-450 uppercase tracking-wider mb-1.5">Relationship Type</label>
                       <select
-                        className="w-full bg-white dark:bg-black text-[#171717] dark:text-white text-[16px] px-2.5 py-1.5 rounded shadow-vercel-input focus:outline-none focus:shadow-vercel-input-focus transition-all duration-200"
+                        className="w-full bg-white dark:bg-[#0a1317] text-[#0a1317] dark:text-[#f1f4f7] text-sm px-3.5 py-2.5 rounded-lg border border-[#ced0d4] dark:border-[#ced0d4]/15 focus:outline-none focus:border-[#1876f2] focus:ring-2 focus:ring-[#1876f2]/15 transition-all duration-200"
                         value={newRelType}
                         onChange={(e) => setNewRelType(e.target.value)}
                       >
@@ -511,9 +517,9 @@ export default function Workspace({ project, onBack, onGoToArtifacts, theme, tog
                     </div>
 
                     <div>
-                      <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Target Entity</label>
+                      <label className="block text-[9px] font-bold text-[#5d6c7b] dark:text-slate-450 uppercase tracking-wider mb-1.5">Target Entity</label>
                       <select
-                        className="w-full bg-white dark:bg-black text-[#171717] dark:text-white text-[16px] px-2.5 py-1.5 rounded shadow-vercel-input focus:outline-none focus:shadow-vercel-input-focus transition-all duration-200"
+                        className="w-full bg-white dark:bg-[#0a1317] text-[#0a1317] dark:text-[#f1f4f7] text-sm px-3.5 py-2.5 rounded-lg border border-[#ced0d4] dark:border-[#ced0d4]/15 focus:outline-none focus:border-[#1876f2] focus:ring-2 focus:ring-[#1876f2]/15 transition-all duration-200"
                         value={newRelTarget}
                         onChange={(e) => setNewRelTarget(e.target.value)}
                       >
@@ -524,9 +530,9 @@ export default function Workspace({ project, onBack, onGoToArtifacts, theme, tog
 
                   <div className="flex gap-2 items-end">
                     <div className="flex-1">
-                      <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Connection Label</label>
+                      <label className="block text-[9px] font-bold text-[#5d6c7b] dark:text-slate-450 uppercase tracking-wider mb-1.5">Connection Label</label>
                       <input
-                        className="w-full bg-white dark:bg-black text-[#171717] dark:text-white text-[16px] px-3 py-1.5 rounded shadow-vercel-input focus:outline-none focus:shadow-vercel-input-focus transition-all duration-200 placeholder-slate-400"
+                        className="w-full bg-white dark:bg-[#0a1317] text-[#0a1317] dark:text-[#f1f4f7] text-sm px-3.5 py-2.5 rounded-lg border border-[#ced0d4] dark:border-[#ced0d4]/15 focus:outline-none focus:border-[#1876f2] focus:ring-2 focus:ring-[#1876f2]/15 transition-all duration-200 placeholder-slate-400"
                         placeholder="e.g. schedules, creates, contains…"
                         type="text"
                         value={newRelLabel}
@@ -535,7 +541,7 @@ export default function Workspace({ project, onBack, onGoToArtifacts, theme, tog
                     </div>
                     <button
                       onClick={handleAddRelationship}
-                      className="bg-[#171717] dark:bg-white text-white dark:text-black hover:bg-[#333333] dark:hover:bg-slate-200 text-xs font-semibold px-4 py-2 rounded-lg shadow-sm transition-colors uppercase tracking-wider"
+                      className="bg-black dark:bg-white text-white dark:text-[#0a1317] hover:bg-[#444950] dark:hover:bg-[#f1f4f7] text-[10px] font-bold px-4 py-3 rounded-full transition-colors uppercase tracking-wider shadow-sm"
                     >
                       Link Entities
                     </button>
