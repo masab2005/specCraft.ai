@@ -223,7 +223,7 @@ export default function Wizard({ onCancel, onProjectCreated }) {
             <div className="space-y-6">
               <div>
                 <h2 className="text-lg font-bold text-[#0a1317] dark:text-white mb-1 tracking-tight">Define User Roles (Actors)</h2>
-                <p className="text-slate-550 text-xs text-slate-500">Specify the actors/users who interact with this system.</p>
+                <p className="text-xs text-slate-500">Specify the actors/users who interact with this system.</p>
               </div>
 
               <div className="space-y-4 pt-2">
@@ -266,7 +266,7 @@ export default function Wizard({ onCancel, onProjectCreated }) {
             <div className="space-y-6">
               <div>
                 <h2 className="text-lg font-bold text-[#0a1317] dark:text-white mb-1 tracking-tight">Define System Features</h2>
-                <p className="text-slate-550 text-xs text-slate-500">List the main functional modules or features the AI should analyze.</p>
+                <p className="text-xs text-slate-500">List the main functional modules or features the AI should analyze.</p>
               </div>
 
               <div className="space-y-4 pt-2">
@@ -309,7 +309,7 @@ export default function Wizard({ onCancel, onProjectCreated }) {
             <div className="space-y-6">
               <div>
                 <h2 className="text-lg font-bold text-[#0a1317] dark:text-white mb-1 tracking-tight">Core Database Entities</h2>
-                <p className="text-slate-550 text-xs text-slate-500">Identify the primary tables or entities of your database.</p>
+                <p className="text-xs text-slate-500">Identify the primary tables or entities of your database.</p>
               </div>
 
               <div className="space-y-4 pt-2">

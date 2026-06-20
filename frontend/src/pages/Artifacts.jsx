@@ -193,7 +193,7 @@ export default function Artifacts({ specification, project, onBack, theme, toggl
                 <span className="material-symbols-outlined text-[24px] animate-pulse">insights</span>
               </div>
               <h2 className="text-xl font-bold text-[#0a1317] dark:text-white tracking-tight">Generating System Artifacts</h2>
-              <p className="text-xs text-slate-550 dark:text-slate-450 mt-2 max-w-md mx-auto leading-relaxed">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 max-w-md mx-auto leading-relaxed">
                 Our AI models are translating your approved system specification into interactive diagrams and requirement documentation.
               </p>
             </div>
@@ -222,7 +222,7 @@ export default function Artifacts({ specification, project, onBack, theme, toggl
                     {/* Status Icon */}
                     <div className="mt-0.5 flex-shrink-0">
                       {isPending && (
-                        <div className="w-6 h-6 rounded-full border border-slate-200 dark:border-zinc-800 flex items-center justify-center text-slate-350 dark:text-zinc-600 text-[10px] font-bold font-mono">
+                        <div className="w-6 h-6 rounded-full border border-slate-200 dark:border-zinc-800 flex items-center justify-center text-slate-400 dark:text-zinc-600 text-[10px] font-bold font-mono">
                           {idx + 1}
                         </div>
                       )}
@@ -355,7 +355,7 @@ export default function Artifacts({ specification, project, onBack, theme, toggl
 
                 <div className="bg-[#f1f4f7]/30 dark:bg-[#1c1e21] border border-[#dee3e9] dark:border-[#ced0d4]/10 rounded-xl p-4 mt-6">
                   <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Caching Info</span>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-450 leading-relaxed">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
                     These artifacts are stored securely in Supabase. Editing the specification via the workspace will invalidate this cache and auto-regenerate fresh diagrams.
                   </p>
                 </div>
@@ -412,7 +412,7 @@ export default function Artifacts({ specification, project, onBack, theme, toggl
                     {/* Raw PlantUML Source Code */}
                     <div className="bg-[#0a1317] border border-[#dee3e9] dark:border-[#ced0d4]/10 rounded-xl p-6 shadow-sm">
                       <div className="flex justify-between items-center mb-4 pb-2 border-b border-[#dee3e9]/10">
-                        <h4 className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">
+                        <h4 className="text-white text-[10px] font-bold uppercase tracking-wider">
                           PlantUML Source Code
                         </h4>
                         <button
@@ -420,20 +420,23 @@ export default function Artifacts({ specification, project, onBack, theme, toggl
                             navigator.clipboard.writeText(diagrams[activeTab]?.plantuml);
                             alert('Copied to clipboard!');
                           }}
-                          className="text-slate-400 hover:text-white transition-colors text-[10px] font-bold uppercase tracking-wider flex items-center gap-1"
+                          className="text-white hover:text-slate-200 transition-colors text-[10px] font-bold uppercase tracking-wider flex items-center gap-1"
                         >
                           <span className="material-symbols-outlined text-[14px]">content_copy</span>
                           Copy Code
                         </button>
                       </div>
 
-                      <pre className="font-mono text-slate-350 text-xs overflow-auto bg-[#1c1e21] p-4 rounded-lg leading-relaxed max-h-[200px]">
+                      <pre 
+                        className="font-mono text-xs overflow-auto bg-[#1c1e21] p-4 rounded-lg leading-relaxed max-h-[200px]"
+                        style={{ color: '#ffffff' }}
+                      >
                         {diagrams[activeTab]?.plantuml}
                       </pre>
                     </div>
                   </>
                 ) : (
-                  <div className="text-center py-20 text-slate-450 italic bg-white dark:bg-[#1c1e21] border border-[#dee3e9] dark:border-[#ced0d4]/10 rounded-xl">
+                  <div className="text-center py-20 text-slate-400 italic bg-white dark:bg-[#1c1e21] border border-[#dee3e9] dark:border-[#ced0d4]/10 rounded-xl">
                     No diagrams generated yet.
                   </div>
                 )}

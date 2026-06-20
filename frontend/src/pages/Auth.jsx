@@ -62,7 +62,7 @@ export default function Auth({ onLoginSuccess }) {
           <h1 className="text-4xl font-bold text-white mb-6 leading-tight tracking-tight">
             Transform Ideas into Software Specifications
           </h1>
-          <p className="text-sm text-slate-350 mb-8 leading-relaxed">
+          <p className="text-sm text-slate-400 mb-8 leading-relaxed">
             The AI systems analyst for modern engineering teams. Design structured schemas, render architectural diagrams, and generate complete SRS documents.
           </p>
           <ul className="space-y-6">

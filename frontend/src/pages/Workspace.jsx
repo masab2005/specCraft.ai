@@ -322,7 +322,7 @@ export default function Workspace({ project, onBack, onGoToArtifacts, theme, tog
               <span className="material-symbols-outlined text-[28px]">error</span>
             </div>
             <h3 className="text-base font-bold text-[#0a1317] dark:text-white mb-2 tracking-tight">Generation Failed</h3>
-            <p className="text-slate-550 dark:text-slate-400 text-xs mb-6 max-w-md mx-auto leading-relaxed">
+            <p className="text-slate-500 dark:text-slate-400 text-xs mb-6 max-w-md mx-auto leading-relaxed">
               Something went wrong while communicating with our AI models. Ready to retry generating your schemas, attributes, and relationships?
             </p>
             <button
@@ -346,7 +346,7 @@ export default function Workspace({ project, onBack, onGoToArtifacts, theme, tog
                 <div className="space-y-4">
                   <div>
                     <span className="text-[9px] text-[#5d6c7b] dark:text-slate-400 font-bold uppercase tracking-wider block">Description</span>
-                    <p className="text-xs text-slate-600 dark:text-slate-450 leading-relaxed mt-1">{project.description}</p>
+                    <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mt-1">{project.description}</p>
                   </div>
                   
                   <div>
@@ -493,7 +493,7 @@ export default function Workspace({ project, onBack, onGoToArtifacts, theme, tog
                   
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div>
-                      <label className="block text-[9px] font-bold text-[#5d6c7b] dark:text-slate-450 uppercase tracking-wider mb-1.5">Source Entity</label>
+                      <label className="block text-[9px] font-bold text-[#5d6c7b] dark:text-slate-400 uppercase tracking-wider mb-1.5">Source Entity</label>
                       <select
                         className="w-full bg-white dark:bg-[#0a1317] text-[#0a1317] dark:text-[#f1f4f7] text-sm px-3.5 py-2.5 rounded-lg border border-[#ced0d4] dark:border-[#ced0d4]/15 focus:outline-none focus:border-[#1876f2] focus:ring-2 focus:ring-[#1876f2]/15 transition-all duration-200"
                         value={newRelSource}
@@ -504,7 +504,7 @@ export default function Workspace({ project, onBack, onGoToArtifacts, theme, tog
                     </div>
 
                     <div>
-                      <label className="block text-[9px] font-bold text-[#5d6c7b] dark:text-slate-450 uppercase tracking-wider mb-1.5">Relationship Type</label>
+                      <label className="block text-[9px] font-bold text-[#5d6c7b] dark:text-slate-400 uppercase tracking-wider mb-1.5">Relationship Type</label>
                       <select
                         className="w-full bg-white dark:bg-[#0a1317] text-[#0a1317] dark:text-[#f1f4f7] text-sm px-3.5 py-2.5 rounded-lg border border-[#ced0d4] dark:border-[#ced0d4]/15 focus:outline-none focus:border-[#1876f2] focus:ring-2 focus:ring-[#1876f2]/15 transition-all duration-200"
                         value={newRelType}
@@ -517,7 +517,7 @@ export default function Workspace({ project, onBack, onGoToArtifacts, theme, tog
                     </div>
 
                     <div>
-                      <label className="block text-[9px] font-bold text-[#5d6c7b] dark:text-slate-450 uppercase tracking-wider mb-1.5">Target Entity</label>
+                      <label className="block text-[9px] font-bold text-[#5d6c7b] dark:text-slate-400 uppercase tracking-wider mb-1.5">Target Entity</label>
                       <select
                         className="w-full bg-white dark:bg-[#0a1317] text-[#0a1317] dark:text-[#f1f4f7] text-sm px-3.5 py-2.5 rounded-lg border border-[#ced0d4] dark:border-[#ced0d4]/15 focus:outline-none focus:border-[#1876f2] focus:ring-2 focus:ring-[#1876f2]/15 transition-all duration-200"
                         value={newRelTarget}
@@ -530,7 +530,7 @@ export default function Workspace({ project, onBack, onGoToArtifacts, theme, tog
 
                   <div className="flex gap-2 items-end">
                     <div className="flex-1">
-                      <label className="block text-[9px] font-bold text-[#5d6c7b] dark:text-slate-450 uppercase tracking-wider mb-1.5">Connection Label</label>
+                      <label className="block text-[9px] font-bold text-[#5d6c7b] dark:text-slate-400 uppercase tracking-wider mb-1.5">Connection Label</label>
                       <input
                         className="w-full bg-white dark:bg-[#0a1317] text-[#0a1317] dark:text-[#f1f4f7] text-sm px-3.5 py-2.5 rounded-lg border border-[#ced0d4] dark:border-[#ced0d4]/15 focus:outline-none focus:border-[#1876f2] focus:ring-2 focus:ring-[#1876f2]/15 transition-all duration-200 placeholder-slate-400"
                         placeholder="e.g. schedules, creates, contains…"

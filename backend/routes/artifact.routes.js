@@ -4,6 +4,7 @@ import { generateUseCasePuml, generateErPuml, generateClassPuml, encodePumlToUrl
 import { generateSrsCore, generateSrsNfr, generateSrsOverview, assembleSrs } from '../services/srs.service.js';
 import { compileMarkdownToPdfStream } from '../utils/pdfCompiler.js';
 import { requireAuth } from '../middleware/auth.middleware.js';
+import { createRateLimiter } from '../middleware/rateLimit.middleware.js';
 
 const router = express.Router();
 
@@ -20,8 +21,14 @@ function streamToBuffer(stream) {
   });
 }
 
+const aiLimiter = createRateLimiter({
+  windowMs: 60 * 1000, // 1 minute
+  max: 60,
+  message: 'AI generation rate limit exceeded. Please wait a moment before trying again.'
+});
+
 // Generate and get diagrams URLs (supports optional ?type=er|class|usecase query param)
-router.get('/:id/diagrams', async (req, res) => {
+router.get('/:id/diagrams', aiLimiter, async (req, res) => {
   try {
     const { data: spec, error } = await supabase
       .from('specifications')
@@ -158,7 +165,7 @@ router.get('/:id/diagrams', async (req, res) => {
 });
 
 // Generate and download SRS Document
-router.get('/:id/srs', async (req, res) => {
+router.get('/:id/srs', aiLimiter, async (req, res) => {
   try {
     const { data: spec, error: specError } = await supabase
       .from('specifications')

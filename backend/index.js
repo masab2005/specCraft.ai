@@ -8,15 +8,27 @@ import specificationRoutes from './routes/specification.routes.js';
 import artifactRoutes from './routes/artifact.routes.js';
 import aiRoutes from './routes/ai.routes.js';
 
+import { createRateLimiter } from './middleware/rateLimit.middleware.js';
+
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 8001;
 
+// Configure global rate limiter (100 requests per 15 mins)
+const globalRateLimiter = createRateLimiter({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: 'Global rate limit exceeded. Please try again after 15 minutes.'
+});
+
 // Middleware for CORS, parsing JSON, and URL-encoded bodies
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Apply global rate limiter to all API endpoints
+app.use('/api', globalRateLimiter);
 
 // Mount Routes
 app.use('/api/projects', projectRoutes);

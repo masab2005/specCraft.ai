@@ -2,6 +2,7 @@ import express from 'express';
 import { supabase } from '../config/supabase.js';
 import { generateAttributes, generateRelationships } from '../services/ai.service.js';
 import { requireAuth } from '../middleware/auth.middleware.js';
+import { createRateLimiter } from '../middleware/rateLimit.middleware.js';
 
 const router = express.Router();
 
@@ -138,8 +139,14 @@ async function generateAndSaveSpec(project) {
   return spec;
 }
 
+const aiLimiter = createRateLimiter({
+  windowMs: 60 * 1000, // 1 minute
+  max: 15,
+  message: 'AI generation rate limit exceeded. Please wait a moment before trying again.'
+});
+
 // Generate Specification
-router.post('/projects/:projectId/specification/generate', async (req, res) => {
+router.post('/projects/:projectId/specification/generate', aiLimiter, async (req, res) => {
   try {
     const { data: project, error: pError } = await supabase
       .from('projects')
