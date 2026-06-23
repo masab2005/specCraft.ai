@@ -41,17 +41,17 @@ specCraft.ai is an AI-powered systems analyst platform designed to translate hig
 *(Placeholders: Replace with actual images from your environment)*
 
 ### Dashboard Overview
-![alt text](image.png)
+![alt text](UI_Screenshots/image.png)
 
 ### Project Creation Wizard
-![alt text](image-1.png)
+![alt text](UI_Screenshots/image-1.png)
 
 ### Interactive Workspace
-![alt text](image-2.png)
+![alt text](UI_Screenshots/image-2.png)
 
 ### Artifacts Center & Diagrams View
-![alt text](image-3.png)
-![alt text](image-4.png)
+![alt text](UI_Screenshots/image-3.png)
+![alt text](UI_Screenshots/image-4.png)
 ---
 
 ## System Architecture
