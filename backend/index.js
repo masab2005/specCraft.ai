@@ -1,6 +1,7 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
+import helmet from 'helmet';
 
 // Import Routes
 import projectRoutes from './routes/project.routes.js';
@@ -22,7 +23,17 @@ const globalRateLimiter = createRateLimiter({
   message: 'Global rate limit exceeded. Please try again after 15 minutes.'
 });
 
-// Middleware for CORS, parsing JSON, and URL-encoded bodies
+// Middleware for security, CORS, parsing JSON, and URL-encoded bodies
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'none'"],
+      connectSrc: ["'self'"],
+      frameAncestors: ["'none'"],
+      objectSrc: ["'none'"]
+    }
+  }
+}));
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

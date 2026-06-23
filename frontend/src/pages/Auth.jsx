@@ -15,7 +15,7 @@ export default function Auth({ onLoginSuccess }) {
       setError('Please fill in all fields.');
       return;
     }
-    
+
     if (!email.includes('@')) {
       setError('Please enter a valid email address.');
       return;
@@ -56,7 +56,7 @@ export default function Auth({ onLoginSuccess }) {
           </div>
           <span className="font-bold text-xl tracking-tight text-white">specCraft.ai</span>
         </div>
-        
+
         {/* Value Prop */}
         <div className="max-w-md my-auto">
           <h1 className="text-4xl font-bold text-white mb-6 leading-tight tracking-tight">
@@ -89,7 +89,7 @@ export default function Auth({ onLoginSuccess }) {
             </li>
           </ul>
         </div>
-        
+
         {/* Footer */}
         <div className="text-xs text-slate-500 font-mono">
           © 2026 SpecCraft AI Systems. All rights reserved.
@@ -157,7 +157,7 @@ export default function Auth({ onLoginSuccess }) {
                 disabled={loading}
               />
             </div>
-            
+
             <div>
               <div className="flex justify-between items-center mb-2">
                 <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" htmlFor="password">Password</label>

@@ -54,7 +54,7 @@ export default function Dashboard({ onCreateProjectClick, onProjectSelect, onLog
           </div>
 
           {/* Theme Toggle Button */}
-          <button 
+          <button
             onClick={toggleTheme}
             className="text-slate-500 hover:text-black dark:text-slate-400 dark:hover:text-white transition-colors flex items-center justify-center p-2 rounded-full border border-[#ced0d4] dark:border-[#ced0d4]/15 bg-white dark:bg-[#1c1e21]"
             title="Toggle Theme"
@@ -63,8 +63,8 @@ export default function Dashboard({ onCreateProjectClick, onProjectSelect, onLog
               {theme === 'dark' ? 'light_mode' : 'dark_mode'}
             </span>
           </button>
-          
-          <button 
+
+          <button
             onClick={onLogout}
             className="text-[10px] font-bold uppercase tracking-wider text-slate-500 hover:text-black dark:text-slate-400 dark:hover:text-white transition-colors flex items-center gap-1.5 border border-[#ced0d4] dark:border-[#ced0d4]/15 px-3.5 py-2.5 rounded-full bg-white dark:bg-[#1c1e21]"
           >
@@ -81,7 +81,7 @@ export default function Dashboard({ onCreateProjectClick, onProjectSelect, onLog
             <h1 className="text-3xl font-bold text-[#0a1317] dark:text-white tracking-tight">Projects Dashboard</h1>
             <p className="text-slate-500 text-xs mt-1">Select an existing project workspace or design a new one.</p>
           </div>
-          
+
           <button
             onClick={onCreateProjectClick}
             className="bg-black dark:bg-white text-white dark:text-[#0a1317] hover:bg-[#444950] dark:hover:bg-[#f1f4f7] text-[10px] font-bold py-3 px-5 rounded-full flex items-center justify-center gap-1.5 shadow-sm transition-colors uppercase tracking-wider"
@@ -128,7 +128,7 @@ export default function Dashboard({ onCreateProjectClick, onProjectSelect, onLog
           /* Projects grid */
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {projects.map((project) => (
-              <div 
+              <div
                 key={project.id}
                 onClick={() => onProjectSelect(project)}
                 className="bg-white dark:bg-[#1c1e21] border border-[#dee3e9] dark:border-[#ced0d4]/10 rounded-xl p-6 hover:border-[#ced0d4] dark:hover:border-white cursor-pointer transition-all duration-200 flex flex-col justify-between"
@@ -139,15 +139,14 @@ export default function Dashboard({ onCreateProjectClick, onProjectSelect, onLog
                       <span className="bg-[#f1f4f7] dark:bg-[#0a1317] text-[#1c1e21] dark:text-[#f1f4f7] text-[9px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border border-[#dee3e9] dark:border-transparent">
                         {project.domain}
                       </span>
-                      <span className={`text-[9px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border border-transparent ${
-                        project.complexity === 'Standard' 
-                          ? 'bg-[#0064e0]/10 text-[#0064e0]' 
+                      <span className={`text-[9px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border border-transparent ${project.complexity === 'Standard'
+                          ? 'bg-[#0064e0]/10 text-[#0064e0]'
                           : 'bg-[#f2a918]/10 text-[#f2a918]'
-                      }`}>
+                        }`}>
                         {project.complexity}
                       </span>
                     </div>
-                    
+
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -190,12 +189,12 @@ export default function Dashboard({ onCreateProjectClick, onProjectSelect, onLog
               <span className="material-symbols-outlined text-[24px] font-bold">warning</span>
               <h3 className="text-base font-bold text-[#0a1317] dark:text-white tracking-tight">Delete Project?</h3>
             </div>
-            
+
             <p className="text-xs text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
-              Are you sure you want to delete <strong className="text-[#0a1317] dark:text-white font-semibold">“{projectToDelete.name}”</strong>? 
+              Are you sure you want to delete <strong className="text-[#0a1317] dark:text-white font-semibold">“{projectToDelete.name}”</strong>?
               This will permanently delete the project and all its specifications and diagram caches. This action cannot be undone.
             </p>
-            
+
             <div className="flex justify-end gap-2.5">
               <button
                 onClick={() => setProjectToDelete(null)}

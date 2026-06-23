@@ -5,6 +5,8 @@ import { generateSrsCore, generateSrsNfr, generateSrsOverview, assembleSrs } fro
 import { compileMarkdownToPdfStream } from '../utils/pdfCompiler.js';
 import { requireAuth } from '../middleware/auth.middleware.js';
 import { createRateLimiter } from '../middleware/rateLimit.middleware.js';
+import { validateSchema } from '../middleware/validation.middleware.js';
+import { getDiagramsSchema, getSrsSchema } from '../middleware/schemas.js';
 
 const router = express.Router();
 
@@ -28,7 +30,7 @@ const aiLimiter = createRateLimiter({
 });
 
 // Generate and get diagrams URLs (supports optional ?type=er|class|usecase query param)
-router.get('/:id/diagrams', aiLimiter, async (req, res) => {
+router.get('/:id/diagrams', validateSchema(getDiagramsSchema), aiLimiter, async (req, res) => {
   try {
     const { data: spec, error } = await supabase
       .from('specifications')
@@ -62,10 +64,6 @@ router.get('/:id/diagrams', aiLimiter, async (req, res) => {
     const master = spec.masterJson;
 
     if (type) {
-      if (!['er', 'class', 'usecase'].includes(type)) {
-        return res.status(400).json({ error: 'Invalid diagram type' });
-      }
-
       if (!master.diagrams || typeof master.diagrams !== 'object') {
         master.diagrams = {};
       }
@@ -160,12 +158,12 @@ router.get('/:id/diagrams', aiLimiter, async (req, res) => {
     });
   } catch (err) {
     console.error('Failed to generate diagram URLs:', err);
-    return res.status(500).json({ error: 'Failed to generate diagram URLs', details: err.message });
+    return res.status(500).json({ error: 'Failed to generate diagram URLs' });
   }
 });
 
 // Generate and download SRS Document
-router.get('/:id/srs', aiLimiter, async (req, res) => {
+router.get('/:id/srs', validateSchema(getSrsSchema), aiLimiter, async (req, res) => {
   try {
     const { data: spec, error: specError } = await supabase
       .from('specifications')
@@ -273,7 +271,7 @@ router.get('/:id/srs', aiLimiter, async (req, res) => {
     }
   } catch (err) {
     console.error('SRS artifact generation failed:', err);
-    return res.status(500).json({ error: 'SRS artifact generation failed', details: err.message });
+    return res.status(500).json({ error: 'SRS artifact generation failed' });
   }
 });
 

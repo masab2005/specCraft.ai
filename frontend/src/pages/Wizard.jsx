@@ -18,11 +18,11 @@ export default function Wizard({ onCancel, onProjectCreated }) {
   const [description, setDescription] = useState('');
   const [domain, setDomain] = useState('Healthcare');
   const [complexity, setComplexity] = useState('Standard');
-  
+
   const [actors, setActors] = useState(['Patient', 'Doctor', 'Admin']);
   const [features, setFeatures] = useState(['Appointment Booking', 'Prescription Writing']);
   const [entities, setEntities] = useState(['Patient', 'Doctor', 'Appointment']);
-  
+
   const [actorInput, setActorInput] = useState('');
   const [featureInput, setFeatureInput] = useState('');
   const [entityInput, setEntityInput] = useState('');
@@ -36,13 +36,13 @@ export default function Wizard({ onCancel, onProjectCreated }) {
       setError(`Input for ${typeName} must contain valid alphanumeric characters.`);
       return;
     }
-    
+
     const isDuplicate = list.some(item => item.trim().toLowerCase() === sanitized.toLowerCase());
     if (isDuplicate) {
       setError(`“${sanitized}” is already in the list.`);
       return;
     }
-    
+
     if (list.length >= limit) {
       setError(`Maximum of ${limit} ${typeName} allowed to ensure AI model accuracy.`);
       return;
@@ -103,8 +103,8 @@ export default function Wizard({ onCancel, onProjectCreated }) {
           </div>
           <span className="font-bold text-base text-[#0a1317] dark:text-white tracking-tight">New Project Wizard</span>
         </div>
-        <button 
-          onClick={onCancel} 
+        <button
+          onClick={onCancel}
           className="text-[10px] font-bold uppercase tracking-wider text-slate-500 hover:text-black dark:text-slate-400 dark:hover:text-white transition-colors"
         >
           Cancel & Exit
@@ -118,20 +118,18 @@ export default function Wizard({ onCancel, onProjectCreated }) {
           {[1, 2, 3, 4].map((s) => (
             <React.Fragment key={s}>
               <div className="flex flex-col items-center">
-                <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
-                  step === s 
-                    ? 'bg-[#0a1317] dark:bg-white text-white dark:text-[#0a1317] ring-4 ring-[#0a1317]/10 dark:ring-white/10' 
-                    : step > s 
-                      ? 'bg-slate-800 text-white' 
+                <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold transition-all ${step === s
+                    ? 'bg-[#0a1317] dark:bg-white text-white dark:text-[#0a1317] ring-4 ring-[#0a1317]/10 dark:ring-white/10'
+                    : step > s
+                      ? 'bg-slate-800 text-white'
                       : 'bg-[#f1f4f7] dark:bg-[#1c1e21] text-slate-400 dark:text-zinc-500'
-                }`}>
+                  }`}>
                   {step > s ? (
                     <span className="material-symbols-outlined text-sm font-bold">check</span>
                   ) : s}
                 </div>
-                <span className={`text-[9px] font-bold mt-2 tracking-wider uppercase ${
-                  step === s ? 'text-[#0a1317] dark:text-white' : 'text-slate-400'
-                }`}>
+                <span className={`text-[9px] font-bold mt-2 tracking-wider uppercase ${step === s ? 'text-[#0a1317] dark:text-white' : 'text-slate-400'
+                  }`}>
                   {s === 1 ? 'Project Info' : s === 2 ? 'Actors' : s === 3 ? 'Features' : 'Entities'}
                 </span>
               </div>

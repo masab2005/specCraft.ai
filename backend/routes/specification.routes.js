@@ -3,6 +3,8 @@ import { supabase } from '../config/supabase.js';
 import { generateAttributes, generateRelationships } from '../services/ai.service.js';
 import { requireAuth } from '../middleware/auth.middleware.js';
 import { createRateLimiter } from '../middleware/rateLimit.middleware.js';
+import { validateSchema } from '../middleware/validation.middleware.js';
+import { idParamSchema, projectIdParamSchema, updateSpecificationSchema } from '../middleware/schemas.js';
 
 const router = express.Router();
 
@@ -146,7 +148,7 @@ const aiLimiter = createRateLimiter({
 });
 
 // Generate Specification
-router.post('/projects/:projectId/specification/generate', aiLimiter, async (req, res) => {
+router.post('/projects/:projectId/specification/generate', validateSchema(projectIdParamSchema), aiLimiter, async (req, res) => {
   try {
     const { data: project, error: pError } = await supabase
       .from('projects')
@@ -172,17 +174,14 @@ router.post('/projects/:projectId/specification/generate', aiLimiter, async (req
     });
   } catch (err) {
     console.error('Specification generation failed:', err);
-    return res.status(500).json({ error: 'Specification generation failed', details: err.message });
+    return res.status(500).json({ error: 'Specification generation failed' });
   }
 });
 
 // PUT /api/specifications/:id (Manual Edit Route)
-router.put('/:id', async (req, res) => {
+router.put('/:id', validateSchema(updateSpecificationSchema), async (req, res) => {
   try {
     const { masterJson } = req.body;
-    if (!masterJson) {
-      return res.status(400).json({ error: 'masterJson is required in request body' });
-    }
 
     const { data: existingSpec, error: fetchError } = await supabase
       .from('specifications')
@@ -235,12 +234,12 @@ router.put('/:id', async (req, res) => {
     });
   } catch (err) {
     console.error('Failed to update specification manually:', err);
-    return res.status(500).json({ error: 'Update failed', details: err.message });
+    return res.status(500).json({ error: 'Update failed' });
   }
 });
 
 // Approve Specification
-router.post('/:id/approve', async (req, res) => {
+router.post('/:id/approve', validateSchema(idParamSchema), async (req, res) => {
   try {
     const { data: existingSpec, error: fetchError } = await supabase
       .from('specifications')
@@ -284,12 +283,12 @@ router.post('/:id/approve', async (req, res) => {
     });
   } catch (err) {
     console.error('Approval failed:', err);
-    return res.status(500).json({ error: 'Approval failed', details: err.message });
+    return res.status(500).json({ error: 'Approval failed' });
   }
 });
 
 // Regenerate Specification
-router.post('/:id/regenerate', async (req, res) => {
+router.post('/:id/regenerate', validateSchema(idParamSchema), async (req, res) => {
   try {
     const { data: spec, error: sError } = await supabase
       .from('specifications')
@@ -325,7 +324,7 @@ router.post('/:id/regenerate', async (req, res) => {
     });
   } catch (err) {
     console.error('Regeneration failed:', err);
-    return res.status(500).json({ error: 'Regeneration failed', details: err.message });
+    return res.status(500).json({ error: 'Regeneration failed' });
   }
 });
 

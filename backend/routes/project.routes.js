@@ -1,6 +1,8 @@
 import express from 'express';
 import { supabase } from '../config/supabase.js';
 import { requireAuth } from '../middleware/auth.middleware.js';
+import { validateSchema } from '../middleware/validation.middleware.js';
+import { createProjectSchema, idParamSchema } from '../middleware/schemas.js';
 
 const router = express.Router();
 
@@ -8,13 +10,27 @@ const router = express.Router();
 router.use(requireAuth);
 
 // Create Project (from Wizard step 1-4)
-router.post('/', async (req, res) => {
+router.post('/', validateSchema(createProjectSchema), async (req, res) => {
   try {
     const { name, description, domain, complexity, actors, features, entities } = req.body;
 
-    if (!name || !description || !domain || !complexity) {
+    // Check if the user already has created 3 projects today
+    const startOfToday = new Date();
+    startOfToday.setUTCHours(0, 0, 0, 0);
+
+    const { count, error: countError } = await supabase
+      .from('projects')
+      .select('id', { count: 'exact', head: true })
+      .eq('userId', req.user.id)
+      .gte('createdAt', startOfToday.toISOString());
+
+    if (countError) {
+      return res.status(400).json({ error: countError.message });
+    }
+
+    if (count >= 3) {
       return res.status(400).json({
-        error: 'Missing required project fields: name, description, domain, complexity'
+        error: 'Project creation limit reached. You can only create up to 3 projects per day.'
       });
     }
 
@@ -44,7 +60,7 @@ router.post('/', async (req, res) => {
     });
   } catch (err) {
     console.error('Project creation failed:', err);
-    return res.status(500).json({ error: 'Project creation failed', details: err.message });
+    return res.status(500).json({ error: 'Project creation failed' });
   }
 });
 
@@ -64,12 +80,12 @@ router.get('/', async (req, res) => {
     return res.json({ success: true, projects });
   } catch (err) {
     console.error('Fetch projects failed:', err);
-    return res.status(500).json({ error: 'Fetch projects failed', details: err.message });
+    return res.status(500).json({ error: 'Fetch projects failed' });
   }
 });
 
 // Get Project by ID (With ownership validation)
-router.get('/:id', async (req, res) => {
+router.get('/:id', validateSchema(idParamSchema), async (req, res) => {
   try {
     const { data: project, error: pError } = await supabase
       .from('projects')
@@ -100,12 +116,12 @@ router.get('/:id', async (req, res) => {
     });
   } catch (err) {
     console.error('Fetch project failed:', err);
-    return res.status(500).json({ error: 'Fetch project failed', details: err.message });
+    return res.status(500).json({ error: 'Fetch project failed' });
   }
 });
 
 // Delete Project (With ownership validation & CASCADE deletion of specifications)
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', validateSchema(idParamSchema), async (req, res) => {
   try {
     const { data: project, error: pError } = await supabase
       .from('projects')
@@ -150,7 +166,7 @@ router.delete('/:id', async (req, res) => {
     });
   } catch (err) {
     console.error('Delete project failed:', err);
-    return res.status(500).json({ error: 'Delete project failed', details: err.message });
+    return res.status(500).json({ error: 'Delete project failed' });
   }
 });
 

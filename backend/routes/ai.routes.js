@@ -1,6 +1,14 @@
 import express from "express";
 import plantumlEncoder from "plantuml-encoder";
 import { llm } from "../ai/llmClient.js";
+import { validateSchema } from "../middleware/validation.middleware.js";
+import {
+  aiTestSchema,
+  aiDiagramSchema,
+  aiGenerateErSchema,
+  aiGenerateUseCaseSchema,
+  aiGenerateClassSchema
+} from "../middleware/schemas.js";
 
 const router = express.Router();
 
@@ -16,7 +24,7 @@ function validatePlantUML(puml) {
   return null;
 }
 
-router.post("/test", async (req, res) => {
+router.post("/test", validateSchema(aiTestSchema), async (req, res) => {
   try {
     const { message } = req.body;
 
@@ -42,24 +50,17 @@ router.post("/test", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({
-      error: "AI request failed",
-      details: err.message
+      error: "AI request failed"
     });
   }
 });
 
-router.post("/diagram", async (req, res) => {
+router.post("/diagram", validateSchema(aiDiagramSchema), async (req, res) => {
   try {
     let { diagram } = req.body;
 
-    if (!diagram) {
-      return res.status(400).json({
-        error: "Missing 'diagram' field in request body"
-      });
-    }
-
     /**
-     * 1. Validate input first
+     * 1. Validate input first (already passed schema validation)
      */
     const validationError = validatePlantUML(diagram);
 
@@ -95,21 +96,14 @@ router.post("/diagram", async (req, res) => {
     console.error("PlantUML encoding failed:", err);
 
     return res.status(500).json({
-      error: "PlantUML encoding failed",
-      details: err.message
+      error: "PlantUML encoding failed"
     });
   }
 });
 
-router.post("/generate-ER-code", async (req, res) => {
+router.post("/generate-ER-code", validateSchema(aiGenerateErSchema), async (req, res) => {
   try {
     const { entities, attributes, relationships, type = "er" } = req.body;
-
-    if (!entities || !Array.isArray(entities)) {
-      return res.status(400).json({
-        error: "entities must be an array"
-      });
-    }
 
     /**
      * 1. Build strict prompt
@@ -215,27 +209,14 @@ Return ONLY valid PlantUML code.
     console.error("UML generation failed:", err);
 
     return res.status(500).json({
-      error: "UML generation failed",
-      details: err.message
+      error: "UML generation failed"
     });
   }
 });
 
-router.post("/generate-usecase-code", async (req, res) => {
+router.post("/generate-usecase-code", validateSchema(aiGenerateUseCaseSchema), async (req, res) => {
   try {
     const { actors, useCases, relationships, type = "usecase" } = req.body;
-
-    if (!actors || !Array.isArray(actors)) {
-      return res.status(400).json({
-        error: "actors must be an array"
-      });
-    }
-
-    if (!useCases || !Array.isArray(useCases)) {
-      return res.status(400).json({
-        error: "useCases must be an array"
-      });
-    }
 
     /**
      * 1. Build strict prompt
@@ -344,21 +325,14 @@ Return ONLY valid PlantUML code.
     console.error("UML generation failed:", err);
 
     return res.status(500).json({
-      error: "UML generation failed",
-      details: err.message
+      error: "UML generation failed"
     });
   }
 });
 
-router.post("/generate-class-code", async (req, res) => {
+router.post("/generate-class-code", validateSchema(aiGenerateClassSchema), async (req, res) => {
   try {
     const { classes, relationships, type = "class" } = req.body;
-
-    if (!classes || !Array.isArray(classes)) {
-      return res.status(400).json({
-        error: "classes must be an array"
-      });
-    }
 
     /**
      * 1. Build strict prompt
@@ -477,8 +451,7 @@ Return ONLY valid PlantUML code.
     console.error("UML generation failed:", err);
 
     return res.status(500).json({
-      error: "UML generation failed",
-      details: err.message
+      error: "UML generation failed"
     });
   }
 });
