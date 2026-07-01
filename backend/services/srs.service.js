@@ -1,5 +1,10 @@
 import { DEFAULT_MODEL, createChatCompletionWithRetry } from '../ai/llmClient.js';
 
+// Prompt Versions
+const SRS_CORE_PROMPT_VERSION = "SRS_CORE_V1";
+const SRS_NFR_PROMPT_VERSION = "SRS_NFR_V1";
+const SRS_OVERVIEW_PROMPT_VERSION = "SRS_OVERVIEW_V1";
+
 // Helper to strip reasoning/thought process blocks from the output
 function cleanThoughtProcess(text) {
   if (!text) return '';
@@ -34,7 +39,7 @@ Guidelines:
   const response = await createChatCompletionWithRetry({
     model: DEFAULT_MODEL,
     messages: [{ role: "user", content: prompt }]
-  });
+  }, { version: SRS_CORE_PROMPT_VERSION, chars: prompt.length });
 
   return cleanThoughtProcess(response.choices[0].message.content);
 }
@@ -58,7 +63,7 @@ Guidelines:
   const response = await createChatCompletionWithRetry({
     model: DEFAULT_MODEL,
     messages: [{ role: "user", content: prompt }]
-  });
+  }, { version: SRS_NFR_PROMPT_VERSION, chars: prompt.length });
 
   return cleanThoughtProcess(response.choices[0].message.content);
 }
@@ -83,7 +88,7 @@ Guidelines:
   const response = await createChatCompletionWithRetry({
     model: DEFAULT_MODEL,
     messages: [{ role: "user", content: prompt }]
-  });
+  }, { version: SRS_OVERVIEW_PROMPT_VERSION, chars: prompt.length });
 
   return cleanThoughtProcess(response.choices[0].message.content);
 }

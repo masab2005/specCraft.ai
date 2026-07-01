@@ -27,7 +27,7 @@ function App() {
     setTheme(prev => prev === 'dark' ? 'light' : 'dark');
   };
 
-  // Check user session on boot
+  // Check user session on boot and register unauthorized listener
   useEffect(() => {
     const currentUser = api.getCurrentUser();
     if (currentUser) {
@@ -36,6 +36,16 @@ function App() {
     } else {
       setView('auth');
     }
+
+    const handleUnauthorized = () => {
+      setUser(null);
+      setSelectedProject(null);
+      setSelectedSpecification(null);
+      setView('auth');
+    };
+
+    window.addEventListener('unauthorized', handleUnauthorized);
+    return () => window.removeEventListener('unauthorized', handleUnauthorized);
   }, []);
 
   const handleLoginSuccess = (loggedInUser) => {

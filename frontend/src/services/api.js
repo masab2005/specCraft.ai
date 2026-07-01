@@ -27,6 +27,31 @@ function getHeaders() {
   return headers;
 }
 
+// Centralized Response Interceptor and Error Parser
+async function handleResponse(res, customErrorMessage) {
+  let data;
+  try {
+    data = await res.json();
+  } catch (parseErr) {
+    data = { error: parseErr.message };
+  }
+
+  if (!res.ok) {
+    if (res.status === 401 || res.status === 403) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('userId');
+      localStorage.removeItem('userEmail');
+      window.dispatchEvent(new Event('unauthorized'));
+    }
+    const errMsg = data.error || customErrorMessage || 'Request failed';
+    const err = new Error(errMsg);
+    err.status = res.status;
+    err.isRateLimit = res.status === 429;
+    throw err;
+  }
+  return data;
+}
+
 export const api = {
   // Authentication
   async login(email, password) {
@@ -68,9 +93,7 @@ export const api = {
       headers: getHeaders(),
       body: JSON.stringify(projectData)
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Failed to create project');
-    return data;
+    return handleResponse(res, 'Failed to create project');
   },
 
   async listProjects() {
@@ -78,9 +101,7 @@ export const api = {
       method: 'GET',
       headers: getHeaders()
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Failed to fetch projects');
-    return data;
+    return handleResponse(res, 'Failed to fetch projects');
   },
 
   async getProjectDetail(projectId) {
@@ -88,9 +109,7 @@ export const api = {
       method: 'GET',
       headers: getHeaders()
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Failed to fetch project detail');
-    return data;
+    return handleResponse(res, 'Failed to fetch project detail');
   },
 
   async deleteProject(projectId) {
@@ -98,9 +117,7 @@ export const api = {
       method: 'DELETE',
       headers: getHeaders()
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Failed to delete project');
-    return data;
+    return handleResponse(res, 'Failed to delete project');
   },
 
   // Specifications
@@ -109,9 +126,7 @@ export const api = {
       method: 'POST',
       headers: getHeaders()
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Failed to generate specification');
-    return data;
+    return handleResponse(res, 'Failed to generate specification');
   },
 
   async updateSpecification(specId, masterJson) {
@@ -120,9 +135,7 @@ export const api = {
       headers: getHeaders(),
       body: JSON.stringify({ masterJson })
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Failed to update specification');
-    return data;
+    return handleResponse(res, 'Failed to update specification');
   },
 
   async approveSpecification(specId) {
@@ -130,9 +143,7 @@ export const api = {
       method: 'POST',
       headers: getHeaders()
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Failed to approve specification');
-    return data;
+    return handleResponse(res, 'Failed to approve specification');
   },
 
   // Diagrams and SRS
@@ -141,9 +152,7 @@ export const api = {
       method: 'GET',
       headers: getHeaders()
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Failed to fetch diagrams');
-    return data;
+    return handleResponse(res, 'Failed to fetch diagrams');
   },
 
   async getDiagram(specId, type) {
@@ -151,9 +160,7 @@ export const api = {
       method: 'GET',
       headers: getHeaders()
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || `Failed to fetch ${type} diagram`);
-    return data;
+    return handleResponse(res, `Failed to fetch ${type} diagram`);
   },
 
   async getSrsMarkdown(specId) {
@@ -161,18 +168,11 @@ export const api = {
       method: 'GET',
       headers: getHeaders()
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Failed to fetch SRS markdown');
-    return data;
+    return handleResponse(res, 'Failed to fetch SRS markdown');
   },
 
   getSrsDownloadUrl(specId) {
     const token = localStorage.getItem('token');
-    // For downloads, we pass the token as a query parameter or the user can fetch with bearer and download.
-    // Since window.open doesn't let us set headers, the backend also accepts token verification in middleware
-    // but wait! Our auth middleware currently only checks the Authorization: Bearer header.
-    // Let's check: does the frontend download using an <a> tag?
-    // Let's check how the frontend handles downloads.
     return `${BASE_URL}/api/artifacts/${specId}/srs?format=pdf&token=${token}`;
   }
 };

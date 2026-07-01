@@ -28,12 +28,26 @@ export default function Wizard({ onCancel, onProjectCreated }) {
   const [entityInput, setEntityInput] = useState('');
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(null);
+
+  const getErrorMessage = () => {
+    if (!error) return '';
+    return typeof error === 'string' ? error : error.message;
+  };
+
+  const isRateLimit = error && typeof error === 'object' && error.isRateLimit;
 
   const addTag = (input, list, setList, setInput, limit, typeName) => {
     const sanitized = sanitizeInput(input, typeName);
     if (!sanitized) {
       setError(`Input for ${typeName} must contain valid alphanumeric characters.`);
+      return;
+    }
+
+    const maxLen = typeName === 'features' ? 50 : 30;
+    if (sanitized.length > maxLen) {
+      const singularName = typeName === 'features' ? 'feature' : typeName === 'actors' ? 'actor' : 'entity';
+      setError(`Individual ${singularName} name must be at most ${maxLen} characters.`);
       return;
     }
 
@@ -72,7 +86,7 @@ export default function Wizard({ onCancel, onProjectCreated }) {
 
   const handleSubmit = async () => {
     setLoading(true);
-    setError('');
+    setError(null);
     try {
       const projectData = {
         name,
@@ -87,7 +101,7 @@ export default function Wizard({ onCancel, onProjectCreated }) {
       onProjectCreated(data.project);
     } catch (err) {
       console.error(err);
-      setError(err.message || 'Failed to create project.');
+      setError(err);
     } finally {
       setLoading(false);
     }
@@ -99,7 +113,7 @@ export default function Wizard({ onCancel, onProjectCreated }) {
       <header className="bg-white dark:bg-[#0a1317] border-b border-[#dee3e9] dark:border-[#ced0d4]/10 h-16 flex items-center justify-between px-6 md:px-12">
         <div className="flex items-center gap-2.5">
           <div className="w-9 h-9 rounded-full bg-black dark:bg-white flex items-center justify-center text-white dark:text-black shadow-sm">
-            <span className="material-symbols-outlined text-[18px] font-bold">magic_button</span>
+            <span className="material-symbols-outlined text-[18px] font-bold">integration_instructions</span>
           </div>
           <span className="font-bold text-base text-[#0a1317] dark:text-white tracking-tight">New Project Wizard</span>
         </div>
@@ -140,10 +154,25 @@ export default function Wizard({ onCancel, onProjectCreated }) {
 
         {/* Form Card - card-product-feature style but without border if we want it clean */}
         <div className="bg-white dark:bg-[#1c1e21] border border-[#dee3e9] dark:border-[#ced0d4]/10 rounded-xxxl p-8 shadow-sm">
-          {error && (
+          {error && isRateLimit && (
+            <div className="bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 p-4 rounded-xl mb-6 text-xs flex justify-between items-center shadow-sm">
+              <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-amber-500 text-[20px] animate-pulse">hourglass_empty</span>
+                <div>
+                  <strong className="block font-bold uppercase tracking-wider text-[10px]">Quota Limit Exceeded</strong>
+                  <span className="block mt-0.5">{getErrorMessage()}</span>
+                </div>
+              </div>
+              <button onClick={handleSubmit} className="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 hover:underline border border-amber-500/20 px-3 py-1.5 rounded-full bg-white dark:bg-[#1c1e21]">
+                Retry
+              </button>
+            </div>
+          )}
+
+          {error && !isRateLimit && (
             <div className="bg-red-50/50 dark:bg-red-950/20 text-[#e41e3f] dark:text-red-400 p-3 rounded-lg text-xs mb-6 flex items-center gap-2 border border-[#e41e3f]/20">
               <span className="material-symbols-outlined text-[#e41e3f] text-[18px]">error</span>
-              <span>{error}</span>
+              <span>{getErrorMessage()}</span>
             </div>
           )}
 
@@ -163,21 +192,31 @@ export default function Wizard({ onCancel, onProjectCreated }) {
                     id="name"
                     placeholder="e.g. HealthTrack Clinic System…"
                     type="text"
+                    maxLength={100}
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                   />
+                  <div className="flex justify-between items-center mt-1">
+                    <span className="text-[10px] text-slate-400">A clear, descriptive name.</span>
+                    <span className="text-[10px] text-slate-400 font-mono">{name.length}/100</span>
+                  </div>
                 </div>
 
                 <div>
                   <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wider" htmlFor="description">Description</label>
                   <textarea
                     rows={4}
+                    maxLength={2000}
                     className="w-full bg-white dark:bg-[#1c1e21] text-[#0a1317] dark:text-[#f1f4f7] text-sm px-3.5 py-2.5 rounded-lg border border-[#ced0d4] dark:border-[#ced0d4]/15 focus:outline-none focus:border-[#1876f2] focus:ring-2 focus:ring-[#1876f2]/15 transition-all duration-200 placeholder-slate-400 leading-relaxed"
                     id="description"
                     placeholder="Explain what the software system does, its goal, and workflows…"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                   />
+                  <div className="flex justify-between items-center mt-1">
+                    <span className="text-[10px] text-slate-400">Explain the system core goal and workflows.</span>
+                    <span className="text-[10px] text-slate-400 font-mono">{description.length}/2000</span>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -206,9 +245,9 @@ export default function Wizard({ onCancel, onProjectCreated }) {
                       value={complexity}
                       onChange={(e) => setComplexity(e.target.value)}
                     >
+                      <option>Simple</option>
                       <option>Standard</option>
-                      <option>High Complexity</option>
-                      <option>Enterprise</option>
+                      <option>Complex</option>
                     </select>
                   </div>
                 </div>
@@ -230,6 +269,7 @@ export default function Wizard({ onCancel, onProjectCreated }) {
                     className="flex-1 bg-white dark:bg-[#1c1e21] text-[#0a1317] dark:text-[#f1f4f7] text-sm px-3.5 py-2.5 rounded-lg border border-[#ced0d4] dark:border-[#ced0d4]/15 focus:outline-none focus:border-[#1876f2] focus:ring-2 focus:ring-[#1876f2]/15 transition-all duration-200 placeholder-slate-400"
                     placeholder="Type actor name (e.g. Doctor) and press Enter…"
                     type="text"
+                    maxLength={30}
                     value={actorInput}
                     onChange={(e) => setActorInput(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && addTag(actorInput, actors, setActors, setActorInput, 8, 'actors')}
@@ -273,6 +313,7 @@ export default function Wizard({ onCancel, onProjectCreated }) {
                     className="flex-1 bg-white dark:bg-[#1c1e21] text-[#0a1317] dark:text-[#f1f4f7] text-sm px-3.5 py-2.5 rounded-lg border border-[#ced0d4] dark:border-[#ced0d4]/15 focus:outline-none focus:border-[#1876f2] focus:ring-2 focus:ring-[#1876f2]/15 transition-all duration-200 placeholder-slate-400"
                     placeholder="Type feature name (e.g. Invoice Billing) and press Enter…"
                     type="text"
+                    maxLength={50}
                     value={featureInput}
                     onChange={(e) => setFeatureInput(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && addTag(featureInput, features, setFeatures, setFeatureInput, 12, 'features')}
@@ -316,6 +357,7 @@ export default function Wizard({ onCancel, onProjectCreated }) {
                     className="flex-1 bg-white dark:bg-[#1c1e21] text-[#0a1317] dark:text-[#f1f4f7] text-sm px-3.5 py-2.5 rounded-lg border border-[#ced0d4] dark:border-[#ced0d4]/15 focus:outline-none focus:border-[#1876f2] focus:ring-2 focus:ring-[#1876f2]/15 transition-all duration-200 placeholder-slate-400"
                     placeholder="Type entity name (e.g. Invoice) and press Enter…"
                     type="text"
+                    maxLength={30}
                     value={entityInput}
                     onChange={(e) => setEntityInput(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && addTag(entityInput, entities, setEntities, setEntityInput, 15, 'entities')}

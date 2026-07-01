@@ -22,8 +22,8 @@ const stringArraySchema = z.array(
 // Complexity enum helper
 const complexitySchema = z.string()
   .transform(val => sanitizeText(val))
-  .refine(val => ['simple', 'moderate', 'complex', 'standard'].includes(val.toLowerCase()), {
-    message: 'Complexity must be one of: simple, moderate, complex, standard'
+  .refine(val => ['simple', 'standard', 'complex'].includes(val.toLowerCase()), {
+    message: 'Complexity must be one of: simple, standard, complex'
   })
   .transform(val => val.toLowerCase());
 
@@ -127,34 +127,4 @@ export const aiDiagramSchema = z.object({
   })
 });
 
-export const aiGenerateErSchema = z.object({
-  body: z.object({
-    entities: stringArraySchema,
-    attributes: z.any().optional(),
-    relationships: z.any().optional(),
-    type: z.string().optional()
-  })
-});
 
-export const aiGenerateUseCaseSchema = z.object({
-  body: z.object({
-    actors: stringArraySchema,
-    useCases: stringArraySchema,
-    relationships: z.any().optional(),
-    type: z.string().optional()
-  })
-});
-
-export const aiGenerateClassSchema = z.object({
-  body: z.object({
-    classes: z.array(
-      z.object({
-        name: z.string().min(1).max(100).transform(val => sanitizeText(val)),
-        attributes: z.array(z.string().max(100).transform(val => sanitizeText(val))).optional(),
-        methods: z.array(z.string().max(100).transform(val => sanitizeText(val))).optional()
-      })
-    ).max(50, { message: 'Cannot generate classes for more than 50 classes at once' }),
-    relationships: z.any().optional(),
-    type: z.string().optional()
-  })
-});

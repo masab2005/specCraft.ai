@@ -1,0 +1,795 @@
+openapi: 3.0.3
+info:
+  title: specCraft.ai Backend API
+  description: |
+    Express.js Backend API for specCraft.ai.
+    This API generates software requirements specifications (SRS) and UML diagrams using Google Gemini and exports them to PDF/Markdown.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8001
+    description: Local Development Server
+paths:
+  # Authentication Reference Endpoint
+  /api/auth/login:
+    post:
+      summary: User Login (Supabase Authentication Proxy)
+      description: |
+        Authenticates a user via email and password. Returns the authenticated session containing the JWT access token.
+        *Note: In the client application, this is executed directly via the Supabase Auth Client SDK.*
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: developer@example.com
+                password:
+                  type: string
+                  format: password
+                  example: Password123!
+      responses:
+        '200':
+          description: Login successful. Returns JWT access token and user metadata.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  session:
+                    type: object
+                    properties:
+                      access_token:
+                        type: string
+                        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                      user:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            format: uuid
+                            example: fdb1e0a8-b648-4cb2-87c2-9e8cbb034f71
+                          email:
+                            type: string
+                            example: developer@example.com
+        '400':
+          description: Invalid email or password.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Invalid login credentials
+        '429':
+          description: Too Many Requests. Login attempt rate limit exceeded.
+
+  # Projects Endpoints
+  /api/projects:
+    post:
+      summary: Create a New Project
+      description: Creates a new project workspace based on the user's wizard inputs. Restricted to a maximum of 3 project creations per user per day.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProjectRequest'
+      responses:
+        '201':
+          description: Project created successfully from wizard input.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Project created successfully from wizard input
+                  project:
+                    $ref: '#/components/schemas/Project'
+        '400':
+          description: Validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized. Missing or invalid Bearer JWT token.
+        '403':
+          description: Forbidden. Authenticated user does not have permission for this request.
+        '429':
+          description: Too Many Requests. Project creation limit (3 projects per day) or rate limit exceeded.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Project creation limit reached. You can only create up to 3 projects per day.
+        '500':
+          description: Internal server error.
+    get:
+      summary: List User Projects
+      description: Returns a list of all projects owned by the currently authenticated user.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of projects retrieved successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  projects:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Project'
+        '401':
+          description: Unauthorized. Missing or invalid Bearer JWT token.
+        '403':
+          description: Forbidden. Access denied to user data.
+        '429':
+          description: Too Many Requests. Global rate limit exceeded.
+
+  /api/projects/{id}:
+    get:
+      summary: Get Project Details
+      description: Returns detailed metadata for a project, including its associated requirements specification.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Numeric project ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Project details retrieved successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  project:
+                    $ref: '#/components/schemas/Project'
+                  specification:
+                    $ref: '#/components/schemas/Specification'
+        '401':
+          description: Unauthorized. Missing or invalid Bearer JWT token.
+        '403':
+          description: Forbidden. User does not own the requested project.
+        '404':
+          description: Project not found.
+        '429':
+          description: Too Many Requests. Global rate limit exceeded.
+    delete:
+      summary: Delete a Project
+      description: Deletes a project and all associated specification requirements (Cascading delete).
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Numeric project ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Project deleted successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Project deleted successfully
+        '401':
+          description: Unauthorized. Missing or invalid Bearer JWT token.
+        '403':
+          description: Forbidden. User does not own the project.
+        '404':
+          description: Project not found.
+        '429':
+          description: Too Many Requests. Global rate limit exceeded.
+
+  # Specifications Endpoints
+  /api/specifications/projects/{projectId}/specification/generate:
+    post:
+      summary: Generate Master Specification
+      description: Starts the AI-generation process to create a draft specification (attributes and relationships) based on project inputs.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          description: Numeric project ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Master specification generated successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Master specification generated successfully
+                  specification:
+                    $ref: '#/components/schemas/Specification'
+        '401':
+          description: Unauthorized. Missing or invalid Bearer JWT token.
+        '403':
+          description: Forbidden. User does not own the project.
+        '404':
+          description: Project not found.
+        '429':
+          description: Too Many Requests. API rate limit exceeded.
+        '500':
+          description: AI specification generation failed.
+
+  /api/specifications/{id}:
+    put:
+      summary: Update Master Specification (Manual Edit)
+      description: Updates the specification requirements schema manually. Resets diagrams cache and sets status to 'pending'.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Numeric specification ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - masterJson
+              properties:
+                masterJson:
+                  $ref: '#/components/schemas/MasterJson'
+      responses:
+        '200':
+          description: Specification updated manually.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Specification updated manually
+                  specification:
+                    $ref: '#/components/schemas/Specification'
+        '400':
+          description: Validation error.
+        '401':
+          description: Unauthorized. Missing or invalid Bearer JWT token.
+        '403':
+          description: Forbidden. User does not own the associated project.
+        '404':
+          description: Specification not found.
+        '429':
+          description: Too Many Requests. API rate limit exceeded.
+
+  /api/specifications/{id}/approve:
+    post:
+      summary: Approve Master Specification
+      description: Approves the current specification requirements, enabling diagram generation and compilation.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Numeric specification ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Specification approved successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Specification approved successfully
+                  specification:
+                    $ref: '#/components/schemas/Specification'
+        '401':
+          description: Unauthorized. Missing or invalid Bearer JWT token.
+        '403':
+          description: Forbidden. User does not own the associated project.
+        '404':
+          description: Specification not found.
+        '429':
+          description: Too Many Requests. API rate limit exceeded.
+
+  /api/specifications/{id}/regenerate:
+    post:
+      summary: Regenerate Specification via AI
+      description: Wipes the manual specification edits and runs the AI generator again based on the original project requirements.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Numeric specification ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Specification regenerated successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Specification regenerated successfully
+                  specification:
+                    $ref: '#/components/schemas/Specification'
+        '401':
+          description: Unauthorized. Missing or invalid Bearer JWT token.
+        '403':
+          description: Forbidden. User does not own the project.
+        '404':
+          description: Specification not found.
+        '429':
+          description: Too Many Requests. API rate limit exceeded.
+
+  # Artifacts Endpoints
+  /api/artifacts/{id}/diagrams:
+    get:
+      summary: Get or Generate Diagrams
+      description: Returns cached diagrams if they exist. Otherwise, triggers Gemini AI to generate ER, Class, and Use Case diagrams.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Numeric specification ID
+          schema:
+            type: integer
+        - name: type
+          in: query
+          required: false
+          description: Optional filter to generate only one diagram type (er, class, usecase)
+          schema:
+            type: string
+            enum: [er, class, usecase]
+      responses:
+        '200':
+          description: Diagrams retrieved successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  diagrams:
+                    type: object
+                    properties:
+                      usecase:
+                        $ref: '#/components/schemas/DiagramData'
+                      er:
+                        $ref: '#/components/schemas/DiagramData'
+                      class:
+                        $ref: '#/components/schemas/DiagramData'
+                  diagram:
+                    $ref: '#/components/schemas/DiagramData'
+        '400':
+          description: Specification is not approved yet.
+        '401':
+          description: Unauthorized. Missing or invalid Bearer JWT token.
+        '403':
+          description: Forbidden. User does not own the project.
+        '404':
+          description: Specification not found.
+        '429':
+          description: Too Many Requests. API rate limit exceeded.
+
+  /api/artifacts/{id}/srs:
+    get:
+      summary: Get or Compile SRS Document
+      description: Compiles and returns the SRS document. Supports Markdown JSON format or binary PDF stream compilation.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Numeric specification ID
+          schema:
+            type: integer
+        - name: format
+          in: query
+          required: false
+          description: Output format (markdown or pdf)
+          schema:
+            type: string
+            enum: [markdown, pdf]
+      responses:
+        '200':
+          description: SRS Document retrieved/compiled successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  srsMarkdown:
+                    type: string
+                    description: Combined markdown document content.
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '401':
+          description: Unauthorized. Missing or invalid Bearer JWT token.
+        '403':
+          description: Forbidden. User does not own the project.
+        '404':
+          description: Specification not found.
+        '429':
+          description: Too Many Requests. API rate limit exceeded.
+
+  # AI Routes
+  /api/ai/test:
+    post:
+      summary: Simple AI Test Endpoint
+      description: Sandbox test route to evaluate AI connectivity and retrieve short text outputs using Gemini.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - message
+              properties:
+                message:
+                  type: string
+                  maxLength: 1000
+                  example: Hello AI, are you active?
+      responses:
+        '200':
+          description: Response received from Gemini model.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: string
+                    example: Online.
+        '400':
+          description: Validation error.
+        '429':
+          description: Too Many Requests. Rate limit exceeded.
+
+  /api/ai/diagram:
+    post:
+      summary: Diagram Encoder & URL Resolver
+      description: Validates raw PlantUML code and encodes it to a public PlantUML rendering server URL.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - diagram
+              properties:
+                diagram:
+                  type: string
+                  minLength: 10
+                  maxLength: 10000
+                  example: |
+                    @startuml
+                    class User
+                    @enduml
+      responses:
+        '200':
+          description: URL resolved successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  url:
+                    type: string
+                    example: http://www.plantuml.com/plantuml/png/SyfFMieGuz98B5N8IqbE...
+                  type:
+                    type: string
+                    example: plantuml_png
+        '400':
+          description: Validation error (e.g., missing @startuml/@enduml wrappers).
+        '429':
+          description: Too Many Requests. Rate limit exceeded.
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Connect via Supabase Bearer Token JWT.
+
+  schemas:
+    Project:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 12
+        name:
+          type: string
+          example: Healthcare App
+        description:
+          type: string
+          example: Peer-to-peer patient and doctor appointment booking platform.
+        domain:
+          type: string
+          example: Healthcare
+        complexity:
+          type: string
+          example: complex
+        actors:
+          type: array
+          items:
+            type: string
+          example: ["Patient", "Doctor", "Admin"]
+        features:
+          type: array
+          items:
+            type: string
+          example: ["Book Appointment", "Process Payments", "Cancel Schedule"]
+        entities:
+          type: array
+          items:
+            type: string
+          example: ["PatientProfile", "DoctorSchedule", "AppointmentTransaction"]
+        userId:
+          type: string
+          format: uuid
+          example: fdb1e0a8-b648-4cb2-87c2-9e8cbb034f71
+        createdAt:
+          type: string
+          format: date-time
+          example: 2026-07-01T15:28:56.000Z
+
+    Specification:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 8
+        projectId:
+          type: integer
+          example: 12
+        masterJson:
+          $ref: '#/components/schemas/MasterJson'
+        approvalStatus:
+          type: string
+          enum: [pending, approved]
+          example: pending
+        srsMarkdown:
+          type: string
+          nullable: true
+          example: null
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    MasterJson:
+      type: object
+      required:
+        - project
+        - actors
+        - features
+        - entities
+        - attributes
+        - relationships
+      properties:
+        project:
+          type: object
+          properties:
+            id:
+              type: integer
+            name:
+              type: string
+            description:
+              type: string
+            domain:
+              type: string
+            complexity:
+              type: string
+        actors:
+          type: array
+          items:
+            type: string
+        features:
+          type: array
+          items:
+            type: string
+        entities:
+          type: array
+          items:
+            type: string
+        attributes:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+          example:
+            PatientProfile: ["profileId", "dateOfBirth", "bloodType"]
+            DoctorSchedule: ["scheduleId", "workingHours", "isAvailable"]
+        relationships:
+          type: array
+          items:
+            $ref: '#/components/schemas/Relationship'
+        diagrams:
+          type: object
+          nullable: true
+          properties:
+            usecase:
+              $ref: '#/components/schemas/DiagramData'
+            er:
+              $ref: '#/components/schemas/DiagramData'
+            class:
+              $ref: '#/components/schemas/DiagramData'
+
+    Relationship:
+      type: object
+      required:
+        - source
+        - target
+        - type
+        - label
+      properties:
+        source:
+          type: string
+          example: PatientProfile
+        target:
+          type: string
+          example: AppointmentTransaction
+        type:
+          type: string
+          enum: [one-to-one, one-to-many, many-to-many]
+          example: one-to-many
+        label:
+          type: string
+          example: books
+
+    DiagramData:
+      type: object
+      properties:
+        plantuml:
+          type: string
+          example: |
+            @startuml
+            actor Patient as patient
+            ...
+            @enduml
+        url:
+          type: string
+          example: http://www.plantuml.com/plantuml/png/SyfFMieGuz98...
+
+    CreateProjectRequest:
+      type: object
+      required:
+        - name
+        - description
+        - domain
+        - complexity
+      properties:
+        name:
+          type: string
+          minLength: 3
+          maxLength: 100
+        description:
+          type: string
+          minLength: 10
+          maxLength: 2000
+        domain:
+          type: string
+          minLength: 2
+          maxLength: 100
+        complexity:
+          type: string
+          enum: [simple, standard, complex]
+        actors:
+          type: array
+          items:
+            type: string
+        features:
+          type: array
+          items:
+            type: string
+        entities:
+          type: array
+          items:
+            type: string
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Validation failed
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+          example: [{"field": "name", "message": "Must be at least 3 characters"}]

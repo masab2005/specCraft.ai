@@ -29,7 +29,7 @@ router.post('/', validateSchema(createProjectSchema), async (req, res) => {
     }
 
     if (count >= 3) {
-      return res.status(400).json({
+      return res.status(429).json({
         error: 'Project creation limit reached. You can only create up to 3 projects per day.'
       });
     }

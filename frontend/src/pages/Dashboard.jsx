@@ -1,22 +1,33 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../services/api';
 
+const getDomainIcon = (domain) => {
+  const d = (domain || '').toLowerCase();
+  if (d.includes('health') || d.includes('medical') || d.includes('biotech') || d.includes('hospital')) return 'medical_services';
+  if (d.includes('finance') || d.includes('bank') || d.includes('payment') || d.includes('invest') || d.includes('money')) return 'payments';
+  if (d.includes('commerce') || d.includes('shop') || d.includes('retail') || d.includes('market') || d.includes('sale')) return 'shopping_bag';
+  if (d.includes('educat') || d.includes('learn') || d.includes('school') || d.includes('course') || d.includes('class')) return 'school';
+  if (d.includes('social') || d.includes('chat') || d.includes('meet') || d.includes('connect') || d.includes('forum')) return 'forum';
+  if (d.includes('analytics') || d.includes('data') || d.includes('science') || d.includes('chart') || d.includes('metric')) return 'monitoring';
+  return 'folder';
+};
+
 export default function Dashboard({ onCreateProjectClick, onProjectSelect, onLogout, theme, toggleTheme }) {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(null);
   const [projectToDelete, setProjectToDelete] = useState(null);
   const user = api.getCurrentUser();
 
   const fetchProjects = async () => {
     setLoading(true);
-    setError('');
+    setError(null);
     try {
       const data = await api.listProjects();
       setProjects(data.projects || []);
     } catch (err) {
       console.error(err);
-      setError('Failed to load projects. Please try refreshing.');
+      setError(err);
     } finally {
       setLoading(false);
     }
@@ -24,13 +35,21 @@ export default function Dashboard({ onCreateProjectClick, onProjectSelect, onLog
 
   const handleDeleteProject = async (projectId) => {
     try {
+      setError(null);
       await api.deleteProject(projectId);
       setProjects(prev => prev.filter(p => p.id !== projectId));
     } catch (err) {
       console.error(err);
-      setError('Failed to delete project. Please try again.');
+      setError(err);
     }
   };
+
+  const getErrorMessage = () => {
+    if (!error) return '';
+    return typeof error === 'string' ? error : error.message;
+  };
+
+  const isRateLimit = error && typeof error === 'object' && error.isRateLimit;
 
   useEffect(() => {
     fetchProjects();
@@ -91,11 +110,26 @@ export default function Dashboard({ onCreateProjectClick, onProjectSelect, onLog
           </button>
         </div>
 
-        {error && (
+        {error && isRateLimit && (
+          <div className="bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 p-4 rounded-xl mb-8 text-xs flex justify-between items-center shadow-sm">
+            <div className="flex items-center gap-3">
+              <span className="material-symbols-outlined text-amber-500 text-[20px] animate-pulse">hourglass_empty</span>
+              <div>
+                <strong className="block font-bold uppercase tracking-wider text-[10px]">Rate Limit Exceeded</strong>
+                <span className="block mt-0.5">{getErrorMessage()}</span>
+              </div>
+            </div>
+            <button onClick={fetchProjects} className="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 hover:underline border border-amber-500/20 px-3 py-1.5 rounded-full bg-white dark:bg-[#1c1e21]">
+              Retry
+            </button>
+          </div>
+        )}
+
+        {error && !isRateLimit && (
           <div className="bg-red-50/50 dark:bg-red-950/20 text-[#e41e3f] dark:text-red-400 px-4 py-3 rounded-lg mb-8 text-xs flex items-center justify-between border border-[#e41e3f]/20">
             <div className="flex items-center gap-2">
               <span className="material-symbols-outlined text-[#e41e3f] text-[18px]">error</span>
-              <span>{error}</span>
+              <span>{getErrorMessage()}</span>
             </div>
             <button onClick={fetchProjects} className="text-xs font-bold underline hover:text-red-950">Retry</button>
           </div>
@@ -131,49 +165,90 @@ export default function Dashboard({ onCreateProjectClick, onProjectSelect, onLog
               <div
                 key={project.id}
                 onClick={() => onProjectSelect(project)}
-                className="bg-white dark:bg-[#1c1e21] border border-[#dee3e9] dark:border-[#ced0d4]/10 rounded-xl p-6 hover:border-[#ced0d4] dark:hover:border-white cursor-pointer transition-all duration-200 flex flex-col justify-between"
+                className="w-full bg-white/95 dark:bg-neutral-900/95 border border-slate-200/80 dark:border-neutral-800 rounded-3xl p-5 shadow-xl dark:shadow-2xl backdrop-blur space-y-4 hover:border-slate-300 dark:hover:border-neutral-700 cursor-pointer transition-all duration-200 flex flex-col justify-between"
               >
-                <div>
-                  <div className="flex justify-between items-start mb-4 w-full">
-                    <div className="flex gap-1.5">
-                      <span className="bg-[#f1f4f7] dark:bg-[#0a1317] text-[#1c1e21] dark:text-[#f1f4f7] text-[9px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border border-[#dee3e9] dark:border-transparent">
-                        {project.domain}
-                      </span>
-                      <span className={`text-[9px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border border-transparent ${project.complexity === 'Standard'
-                          ? 'bg-[#0064e0]/10 text-[#0064e0]'
-                          : 'bg-[#f2a918]/10 text-[#f2a918]'
-                        }`}>
-                        {project.complexity}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-4 border-b border-slate-100 dark:border-neutral-800/70 pb-4">
+                    <div className="h-12 w-12 rounded-full flex items-center justify-center bg-slate-50 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700/50 text-slate-600 dark:text-neutral-300 shrink-0">
+                      <span className="material-symbols-outlined text-[22px]">
+                        {getDomainIcon(project.domain)}
                       </span>
                     </div>
-
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold tracking-tight text-slate-900 dark:text-neutral-50 truncate">
+                        {project.name}
+                      </p>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="text-[11px] text-slate-500 dark:text-neutral-400 truncate">
+                          {project.domain}
+                        </span>
+                        <span className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border ${
+                          project.complexity?.toLowerCase() === 'simple'
+                            ? 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-500/20 text-emerald-700 dark:text-[#31a24c]'
+                            : project.complexity?.toLowerCase() === 'standard'
+                            ? 'bg-[#0064e0]/10 border-[#0064e0]/20 text-[#0064e0] dark:bg-[#0064e0]/20 dark:border-[#0064e0]/30 dark:text-[#3b82f6]'
+                            : 'bg-[#f2a918]/10 border-[#f2a918]/20 text-[#e09100] dark:bg-[#f2a918]/20 dark:border-[#f2a918]/30 dark:text-[#fbbf24]'
+                        }`}>
+                          {project.complexity}
+                        </span>
+                      </div>
+                    </div>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         setProjectToDelete(project);
                       }}
-                      className="text-slate-400 hover:text-[#e41e3f] transition-colors p-1.5 rounded-full hover:bg-slate-50 dark:hover:bg-[#0a1317] flex items-center justify-center"
+                      className="text-slate-400 hover:text-[#e41e3f] transition-colors p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-neutral-800/50 flex items-center justify-center shrink-0"
                       title="Delete Project"
                     >
                       <span className="material-symbols-outlined text-[16px]">delete</span>
                     </button>
                   </div>
 
-                  <h3 className="text-base font-bold text-[#0a1317] dark:text-white mb-2 line-clamp-1 tracking-tight">{project.name}</h3>
-                  <p className="text-slate-500 dark:text-slate-400 text-xs line-clamp-3 mb-6 leading-relaxed">
+                  <p className="text-xs text-slate-500 dark:text-neutral-400 line-clamp-5 leading-relaxed min-h-[6rem] overflow-hidden">
                     {project.description}
                   </p>
+
+                  <div className="flex items-center justify-between text-center text-xs text-slate-600 dark:text-neutral-300 border-y border-slate-100 dark:border-neutral-800/70 py-3">
+                    <div className="flex-1">
+                      <p className="text-[9px] uppercase tracking-[0.2em] text-slate-400 dark:text-neutral-500 font-semibold">
+                        Actors
+                      </p>
+                      <p className="mt-1 text-slate-900 dark:text-neutral-50 font-medium">
+                        {project.actors?.length || 0}
+                      </p>
+                    </div>
+                    <div className="flex-1 border-x border-slate-100 dark:border-neutral-800/70">
+                      <p className="text-[9px] uppercase tracking-[0.2em] text-slate-400 dark:text-neutral-500 font-semibold">
+                        Entities
+                      </p>
+                      <p className="mt-1 text-slate-900 dark:text-neutral-50 font-medium">
+                        {project.entities?.length || 0}
+                      </p>
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-[9px] uppercase tracking-[0.2em] text-slate-400 dark:text-neutral-500 font-semibold">
+                        Features
+                      </p>
+                      <p className="mt-1 text-slate-900 dark:text-neutral-50 font-medium">
+                        {project.features?.length || 0}
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="border-t border-[#dee3e9] dark:border-[#ced0d4]/10 pt-4 flex justify-between items-center text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                  <span className="flex items-center gap-1">
-                    <span className="material-symbols-outlined text-[13px]">groups</span>
-                    {project.actors?.length || 0} Actors
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <span className="material-symbols-outlined text-[13px]">account_tree</span>
-                    {project.entities?.length || 0} Entities
-                  </span>
+                <div className="pt-4">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onProjectSelect(project);
+                    }}
+                    className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-black hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-100 text-white dark:text-[#0a1317] text-xs font-semibold tracking-wide uppercase transition-colors outline-none"
+                    type="button"
+                  >
+                    <span className="material-symbols-outlined text-[16px] font-semibold">arrow_right_alt</span>
+                    <span>Enter Workspace</span>
+                  </button>
                 </div>
               </div>
             ))}

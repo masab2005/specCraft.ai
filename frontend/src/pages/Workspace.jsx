@@ -18,7 +18,14 @@ export default function Workspace({ project, onBack, onGoToArtifacts, theme, tog
   const [genLoading, setGenLoading] = useState(false);
   const [saveLoading, setSaveLoading] = useState(false);
   const [approveLoading, setApproveLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(null);
+
+  const getErrorMessage = () => {
+    if (!error) return '';
+    return typeof error === 'string' ? error : error.message;
+  };
+
+  const isRateLimit = error && typeof error === 'object' && error.isRateLimit;
   
   const [editedAttributes, setEditedAttributes] = useState({});
   const [editedRelationships, setEditedRelationships] = useState([]);
@@ -60,7 +67,7 @@ export default function Workspace({ project, onBack, onGoToArtifacts, theme, tog
           }
         } catch (genErr) {
           console.error(genErr);
-          setError(genErr.message || 'Auto-generation of specification model failed.');
+          setError(genErr);
         } finally {
           setGenLoading(false);
           setLoading(false);
@@ -68,7 +75,7 @@ export default function Workspace({ project, onBack, onGoToArtifacts, theme, tog
       }
     } catch (err) {
       console.error(err);
-      setError('Failed to load project details.');
+      setError(err);
       setLoading(false);
     }
   };
@@ -79,7 +86,7 @@ export default function Workspace({ project, onBack, onGoToArtifacts, theme, tog
 
   const handleGenerate = async () => {
     setGenLoading(true);
-    setError('');
+    setError(null);
     try {
       const data = await api.generateSpecification(project.id);
       setSpecification(data.specification);
@@ -92,7 +99,7 @@ export default function Workspace({ project, onBack, onGoToArtifacts, theme, tog
       setHasChanges(false);
     } catch (err) {
       console.error(err);
-      setError(err.message || 'Generation failed. Please try again.');
+      setError(err);
     } finally {
       setGenLoading(false);
     }
@@ -103,6 +110,11 @@ export default function Workspace({ project, onBack, onGoToArtifacts, theme, tog
     const sanitized = sanitizeInput(input, 'attributes');
     if (!sanitized) {
       setError(`Attribute field must contain valid alphanumeric characters.`);
+      return;
+    }
+
+    if (sanitized.length > 30) {
+      setError(`Attribute name must be at most 30 characters.`);
       return;
     }
     
@@ -143,6 +155,12 @@ export default function Workspace({ project, onBack, onGoToArtifacts, theme, tog
   const handleAddRelationship = () => {
     if (!newRelSource || !newRelTarget || !newRelLabel.trim()) return;
 
+    const label = newRelLabel.trim();
+    if (label.length > 30) {
+      setError(`Relationship connection label must be at most 30 characters.`);
+      return;
+    }
+
     const newRel = {
       source: newRelSource,
       target: newRelTarget,
@@ -162,7 +180,7 @@ export default function Workspace({ project, onBack, onGoToArtifacts, theme, tog
 
   const handleSave = async () => {
     setSaveLoading(true);
-    setError('');
+    setError(null);
     try {
       const updatedMasterJson = {
         ...specification.masterJson,
@@ -177,7 +195,7 @@ export default function Workspace({ project, onBack, onGoToArtifacts, theme, tog
       setHasChanges(false);
     } catch (err) {
       console.error(err);
-      setError(err.message || 'Failed to save edits.');
+      setError(err);
     } finally {
       setSaveLoading(false);
     }
@@ -185,14 +203,14 @@ export default function Workspace({ project, onBack, onGoToArtifacts, theme, tog
 
   const handleApprove = async () => {
     setApproveLoading(true);
-    setError('');
+    setError(null);
     try {
       const data = await api.approveSpecification(specification.id);
       setSpecification(data.specification);
       setHasChanges(false);
     } catch (err) {
       console.error(err);
-      setError(err.message || 'Approval failed.');
+      setError(err);
     } finally {
       setApproveLoading(false);
     }
@@ -292,10 +310,25 @@ export default function Workspace({ project, onBack, onGoToArtifacts, theme, tog
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-6 md:px-12 py-10 flex flex-col justify-start">
-        {error && (
+        {error && isRateLimit && (
+          <div className="bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 p-4 rounded-xl mb-8 text-xs flex justify-between items-center shadow-sm">
+            <div className="flex items-center gap-3">
+              <span className="material-symbols-outlined text-amber-500 text-[20px] animate-pulse">hourglass_empty</span>
+              <div>
+                <strong className="block font-bold uppercase tracking-wider text-[10px]">Rate Limit Exceeded</strong>
+                <span className="block mt-0.5">{getErrorMessage()}</span>
+              </div>
+            </div>
+            <button onClick={fetchSpec} className="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 hover:underline border border-amber-500/20 px-3 py-1.5 rounded-full bg-white dark:bg-[#1c1e21]">
+              Retry
+            </button>
+          </div>
+        )}
+
+        {error && !isRateLimit && (
           <div className="bg-red-50/50 dark:bg-red-950/20 text-[#e41e3f] dark:text-red-400 p-3 rounded-lg mb-8 text-xs flex items-center gap-2 border border-[#e41e3f]/20">
             <span className="material-symbols-outlined text-[#e41e3f] text-[18px]">error</span>
-            <span>{error}</span>
+            <span>{getErrorMessage()}</span>
           </div>
         )}
 
@@ -431,6 +464,7 @@ export default function Workspace({ project, onBack, onGoToArtifacts, theme, tog
                           className="flex-1 bg-white dark:bg-[#0a1317] text-[#0a1317] dark:text-[#f1f4f7] text-sm px-3.5 py-2.5 rounded-lg border border-[#ced0d4] dark:border-[#ced0d4]/15 focus:outline-none focus:border-[#1876f2] focus:ring-2 focus:ring-[#1876f2]/15 transition-all duration-200 placeholder-slate-400"
                           placeholder={`Add field to ${entity}…`}
                           type="text"
+                          maxLength={30}
                           value={newAttrInputs[entity] || ''}
                           onChange={(e) => setNewAttrInputs({ ...newAttrInputs, [entity]: e.target.value })}
                           onKeyDown={(e) => e.key === 'Enter' && handleAddAttribute(entity)}
@@ -535,6 +569,7 @@ export default function Workspace({ project, onBack, onGoToArtifacts, theme, tog
                         className="w-full bg-white dark:bg-[#0a1317] text-[#0a1317] dark:text-[#f1f4f7] text-sm px-3.5 py-2.5 rounded-lg border border-[#ced0d4] dark:border-[#ced0d4]/15 focus:outline-none focus:border-[#1876f2] focus:ring-2 focus:ring-[#1876f2]/15 transition-all duration-200 placeholder-slate-400"
                         placeholder="e.g. schedules, creates, contains…"
                         type="text"
+                        maxLength={30}
                         value={newRelLabel}
                         onChange={(e) => setNewRelLabel(e.target.value)}
                       />

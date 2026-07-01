@@ -1,4 +1,19 @@
 import { DEFAULT_MODEL, createChatCompletionWithRetry } from '../ai/llmClient.js';
+import { z } from 'zod';
+
+// Prompt Versions
+const ATTRIBUTES_PROMPT_VERSION = "ATTRIBUTES_V1";
+const RELATIONSHIPS_PROMPT_VERSION = "RELATIONSHIPS_V1";
+
+// Zod Structural Schemas
+const attributesSchema = z.record(z.string(), z.array(z.string()));
+const relationshipSchema = z.object({
+  source: z.string(),
+  target: z.string(),
+  type: z.enum(['one-to-one', 'one-to-many', 'many-to-many']),
+  label: z.string()
+});
+const relationshipsSchema = z.array(relationshipSchema);
 
 function parseJSONFromResponse(text) {
   let cleanText = text.trim();
@@ -33,27 +48,48 @@ EXAMPLE FORMAT (FOLLOW EXACTLY):
 NOW GENERATE:
 `;
 
-  const response = await createChatCompletionWithRetry({
-    model: DEFAULT_MODEL,
-    temperature: 0.2,
-    messages: [
-      {
-        role: "system",
-        content: "You are a database design assistant that outputs strictly valid JSON and nothing else."
-      },
-      {
-        role: "user",
-        content: prompt
-      }
-    ]
-  });
+  let currentPrompt = prompt;
+  const maxRetries = 2;
 
-  const content = response.choices[0].message.content;
-  try {
-    return parseJSONFromResponse(content);
-  } catch (err) {
-    console.error("Failed to parse attributes JSON from response:", content);
-    throw new Error("Failed to generate valid JSON attributes: " + err.message);
+  for (let i = 0; i <= maxRetries; i++) {
+    try {
+      const response = await createChatCompletionWithRetry({
+        model: DEFAULT_MODEL,
+        temperature: 0.2,
+        messages: [
+          {
+            role: "system",
+            content: "You are a database design assistant that outputs strictly valid JSON and nothing else."
+          },
+          {
+            role: "user",
+            content: currentPrompt
+          }
+        ]
+      }, { version: ATTRIBUTES_PROMPT_VERSION, chars: currentPrompt.length });
+
+      const content = response.choices[0].message.content;
+      const parsed = parseJSONFromResponse(content);
+
+      // Zod Structural Validation
+      attributesSchema.parse(parsed);
+
+      return parsed;
+    } catch (err) {
+      console.warn(`[JSON VALIDATION FAILURE] Version: ${ATTRIBUTES_PROMPT_VERSION} | Attempt: ${i + 1}/${maxRetries + 1} | Error: ${err.message}`);
+
+      if (i < maxRetries) {
+        currentPrompt = `${prompt}
+
+CRITICAL CORRECTION REQUIRED:
+Your previous output failed JSON parsing or schema validation with the following error:
+"${err.message}"
+
+Please correct the format and output strictly valid JSON conforming to the structural schema: record of string arrays. Do not include markdown wraps or explanations.`;
+      } else {
+        throw new Error("Failed to generate valid JSON attributes: " + err.message);
+      }
+    }
   }
 }
 
@@ -87,27 +123,47 @@ EXAMPLE FORMAT (FOLLOW EXACTLY):
 NOW GENERATE:
 `;
 
-  const response = await createChatCompletionWithRetry({
-    model: DEFAULT_MODEL,
-    temperature: 0.2,
-    messages: [
-      {
-        role: "system",
-        content: "You are a system architecture design assistant that outputs strictly valid JSON and nothing else."
-      },
-      {
-        role: "user",
-        content: prompt
-      }
-    ]
-  });
+  let currentPrompt = prompt;
+  const maxRetries = 2;
 
-  const content = response.choices[0].message.content;
-  try {
-    const parsed = parseJSONFromResponse(content);
-    return parsed.relationships || [];
-  } catch (err) {
-    console.error("Failed to parse relationships JSON from response:", content);
-    throw new Error("Failed to generate valid JSON relationships: " + err.message);
+  for (let i = 0; i <= maxRetries; i++) {
+    try {
+      const response = await createChatCompletionWithRetry({
+        model: DEFAULT_MODEL,
+        temperature: 0.2,
+        messages: [
+          {
+            role: "system",
+            content: "You are a system architecture design assistant that outputs strictly valid JSON and nothing else."
+          },
+          {
+            role: "user",
+            content: currentPrompt
+          }
+        ]
+      }, { version: RELATIONSHIPS_PROMPT_VERSION, chars: currentPrompt.length });
+
+      const content = response.choices[0].message.content;
+      const parsed = parseJSONFromResponse(content);
+
+      // Zod Structural Validation
+      relationshipsSchema.parse(parsed.relationships || []);
+
+      return parsed.relationships || [];
+    } catch (err) {
+      console.warn(`[JSON VALIDATION FAILURE] Version: ${RELATIONSHIPS_PROMPT_VERSION} | Attempt: ${i + 1}/${maxRetries + 1} | Error: ${err.message}`);
+
+      if (i < maxRetries) {
+        currentPrompt = `${prompt}
+
+CRITICAL CORRECTION REQUIRED:
+Your previous output failed JSON parsing or schema validation with the following error:
+"${err.message}"
+
+Please correct the format and output strictly valid JSON conforming to the structural schema. Ensure the root object has a "relationships" array where each relationship contains: source, target, type (one-of: one-to-one, one-to-many, many-to-many), and label. Do not include markdown wraps or explanations.`;
+      } else {
+        throw new Error("Failed to generate valid JSON relationships: " + err.message);
+      }
+    }
   }
 }
