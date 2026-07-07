@@ -15,12 +15,16 @@ router.use(requireAuth);
 function validateAndCleanMasterJson(projectEntities, masterJson) {
   const cleanedAttributes = {};
 
+  // Build lowercase lookup Map for O(1) checks
+  const entityMap = new Map();
+  projectEntities.forEach(e => {
+    entityMap.set(e.trim().toLowerCase(), e);
+  });
+
   // 1. Clean attributes
   if (masterJson.attributes && typeof masterJson.attributes === 'object') {
     Object.keys(masterJson.attributes).forEach(entityName => {
-      const matchedEntity = projectEntities.find(
-        e => e.trim().toLowerCase() === entityName.trim().toLowerCase()
-      );
+      const matchedEntity = entityMap.get(entityName.trim().toLowerCase());
       if (matchedEntity) {
         const attrs = masterJson.attributes[entityName];
         if (Array.isArray(attrs)) {
@@ -40,32 +44,23 @@ function validateAndCleanMasterJson(projectEntities, masterJson) {
   // 2. Clean relationships
   let cleanedRelationships = [];
   if (Array.isArray(masterJson.relationships)) {
+    const validTypes = new Set(['one-to-one', 'one-to-many', 'many-to-many']);
     cleanedRelationships = masterJson.relationships
       .filter(rel => {
         if (!rel || typeof rel !== 'object') return false;
-        const source = String(rel.source || '').trim();
-        const target = String(rel.target || '').trim();
+        const source = String(rel.source || '').trim().toLowerCase();
+        const target = String(rel.target || '').trim().toLowerCase();
         const type = String(rel.type || '').trim().toLowerCase();
 
-        const sourceExists = projectEntities.some(
-          e => e.trim().toLowerCase() === source.toLowerCase()
-        );
-        const targetExists = projectEntities.some(
-          e => e.trim().toLowerCase() === target.toLowerCase()
-        );
-
-        const validTypes = ['one-to-one', 'one-to-many', 'many-to-many'];
-        const typeIsValid = validTypes.includes(type);
+        const sourceExists = entityMap.has(source);
+        const targetExists = entityMap.has(target);
+        const typeIsValid = validTypes.has(type);
 
         return sourceExists && targetExists && typeIsValid;
       })
       .map(rel => {
-        const sourceEntity = projectEntities.find(
-          e => e.trim().toLowerCase() === String(rel.source).trim().toLowerCase()
-        );
-        const targetEntity = projectEntities.find(
-          e => e.trim().toLowerCase() === String(rel.target).trim().toLowerCase()
-        );
+        const sourceEntity = entityMap.get(String(rel.source).trim().toLowerCase());
+        const targetEntity = entityMap.get(String(rel.target).trim().toLowerCase());
         return {
           source: sourceEntity,
           target: targetEntity,
@@ -102,41 +97,18 @@ async function generateAndSaveSpec(project) {
 
   masterJson = validateAndCleanMasterJson(project.entities, masterJson);
 
-  const { data: existingSpec, error: fetchError } = await supabase
+  const { data: spec, error: upsertError } = await supabase
     .from('specifications')
-    .select('*')
-    .eq('projectId', project.id)
-    .maybeSingle();
+    .upsert({
+      projectId: project.id,
+      masterJson,
+      approvalStatus: 'pending',
+      updatedAt: new Date().toISOString()
+    }, { onConflict: 'projectId' })
+    .select()
+    .single();
 
-  let spec;
-  if (existingSpec) {
-    const { data: updatedSpec, error: updateError } = await supabase
-      .from('specifications')
-      .update({
-        masterJson,
-        approvalStatus: 'pending',
-        updatedAt: new Date().toISOString()
-      })
-      .eq('projectId', project.id)
-      .select()
-      .single();
-
-    if (updateError) throw new Error(updateError.message);
-    spec = updatedSpec;
-  } else {
-    const { data: newSpec, error: insertError } = await supabase
-      .from('specifications')
-      .insert({
-        projectId: project.id,
-        masterJson,
-        approvalStatus: 'pending'
-      })
-      .select()
-      .single();
-
-    if (insertError) throw new Error(insertError.message);
-    spec = newSpec;
-  }
+  if (upsertError) throw new Error(upsertError.message);
 
   return spec;
 }
@@ -183,25 +155,17 @@ router.put('/:id', validateSchema(updateSpecificationSchema), async (req, res) =
   try {
     const { masterJson } = req.body;
 
-    const { data: existingSpec, error: fetchError } = await supabase
+    const { data: specWithProject, error: fetchError } = await supabase
       .from('specifications')
-      .select('*')
+      .select('*, project:projects!inner(*)')
       .eq('id', req.params.id)
       .single();
 
-    if (fetchError || !existingSpec) {
+    if (fetchError || !specWithProject) {
       return res.status(404).json({ error: 'Specification not found' });
     }
 
-    const { data: project, error: pError } = await supabase
-      .from('projects')
-      .select('*')
-      .eq('id', existingSpec.projectId)
-      .single();
-
-    if (pError || !project) {
-      return res.status(404).json({ error: 'Associated project not found' });
-    }
+    const project = specWithProject.project;
 
     // Verify ownership
     if (project.userId !== req.user.id) {
@@ -241,24 +205,18 @@ router.put('/:id', validateSchema(updateSpecificationSchema), async (req, res) =
 // Approve Specification
 router.post('/:id/approve', validateSchema(idParamSchema), async (req, res) => {
   try {
-    const { data: existingSpec, error: fetchError } = await supabase
+    const { data: specWithProject, error: fetchError } = await supabase
       .from('specifications')
-      .select('*')
+      .select('*, project:projects!inner(*)')
       .eq('id', req.params.id)
       .single();
 
-    if (fetchError || !existingSpec) {
+    if (fetchError || !specWithProject) {
       return res.status(404).json({ error: 'Specification not found' });
     }
 
     // Verify ownership of the associated project
-    const { data: project, error: pError } = await supabase
-      .from('projects')
-      .select('*')
-      .eq('id', existingSpec.projectId)
-      .single();
-
-    if (pError || !project || project.userId !== req.user.id) {
+    if (specWithProject.project.userId !== req.user.id) {
       return res.status(403).json({ error: 'Access Denied: You do not own this project' });
     }
 
@@ -290,32 +248,22 @@ router.post('/:id/approve', validateSchema(idParamSchema), async (req, res) => {
 // Regenerate Specification
 router.post('/:id/regenerate', validateSchema(idParamSchema), async (req, res) => {
   try {
-    const { data: spec, error: sError } = await supabase
+    const { data: specWithProject, error: fetchError } = await supabase
       .from('specifications')
-      .select('*')
+      .select('*, project:projects!inner(*)')
       .eq('id', req.params.id)
       .single();
 
-    if (sError || !spec) {
+    if (fetchError || !specWithProject) {
       return res.status(404).json({ error: 'Specification not found' });
     }
 
-    const { data: project, error: pError } = await supabase
-      .from('projects')
-      .select('*')
-      .eq('id', spec.projectId)
-      .single();
-
-    if (pError || !project) {
-      return res.status(404).json({ error: 'Associated project not found' });
-    }
-
     // Verify ownership
-    if (project.userId !== req.user.id) {
+    if (specWithProject.project.userId !== req.user.id) {
       return res.status(403).json({ error: 'Access Denied: You do not own this project' });
     }
 
-    const updatedSpec = await generateAndSaveSpec(project);
+    const updatedSpec = await generateAndSaveSpec(specWithProject.project);
 
     return res.json({
       success: true,

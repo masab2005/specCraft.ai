@@ -67,11 +67,15 @@ router.post('/', validateSchema(createProjectSchema), async (req, res) => {
 // List Projects (Filtered by active User ID)
 router.get('/', async (req, res) => {
   try {
+    const limit = Math.min(parseInt(req.query.limit || '20', 10), 100);
+    const offset = parseInt(req.query.offset || '0', 10);
+
     const { data: projects, error } = await supabase
       .from('projects')
       .select('*')
       .eq('userId', req.user.id) // Only fetch projects owned by this user
-      .order('createdAt', { ascending: false });
+      .order('createdAt', { ascending: false })
+      .range(offset, offset + limit - 1);
 
     if (error) {
       return res.status(400).json({ error: error.message });
@@ -89,7 +93,7 @@ router.get('/:id', validateSchema(idParamSchema), async (req, res) => {
   try {
     const { data: project, error: pError } = await supabase
       .from('projects')
-      .select('*')
+      .select('*, specifications(*)')
       .eq('id', req.params.id)
       .single();
 
@@ -102,17 +106,17 @@ router.get('/:id', validateSchema(idParamSchema), async (req, res) => {
       return res.status(403).json({ error: 'Access Denied: You do not own this project' });
     }
 
-    // Check for associated specification
-    const { data: specification, error: sError } = await supabase
-      .from('specifications')
-      .select('*')
-      .eq('projectId', project.id)
-      .maybeSingle();
+    // Extract specifications object (one-to-one relationship)
+    const specification = project.specifications || null;
+
+    // Clean up project output to match original route structure
+    const projectData = { ...project };
+    delete projectData.specifications;
 
     return res.json({
       success: true,
-      project,
-      specification: specification || null
+      project: projectData,
+      specification
     });
   } catch (err) {
     console.error('Fetch project failed:', err);

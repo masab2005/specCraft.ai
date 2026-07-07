@@ -34,7 +34,7 @@ router.get('/:id/diagrams', validateSchema(getDiagramsSchema), aiLimiter, async 
   try {
     const { data: spec, error } = await supabase
       .from('specifications')
-      .select('*')
+      .select('*, project:projects!inner(*)')
       .eq('id', req.params.id)
       .single();
 
@@ -43,13 +43,7 @@ router.get('/:id/diagrams', validateSchema(getDiagramsSchema), aiLimiter, async 
     }
 
     // Verify ownership of the associated project
-    const { data: project, error: pError } = await supabase
-      .from('projects')
-      .select('*')
-      .eq('id', spec.projectId)
-      .single();
-
-    if (pError || !project || project.userId !== req.user.id) {
+    if (spec.project.userId !== req.user.id) {
       return res.status(403).json({ error: 'Access Denied: You do not own this project' });
     }
 
@@ -167,7 +161,7 @@ router.get('/:id/srs', validateSchema(getSrsSchema), aiLimiter, async (req, res)
   try {
     const { data: spec, error: specError } = await supabase
       .from('specifications')
-      .select('*')
+      .select('*, project:projects!inner(*)')
       .eq('id', req.params.id)
       .single();
 
@@ -176,13 +170,7 @@ router.get('/:id/srs', validateSchema(getSrsSchema), aiLimiter, async (req, res)
     }
 
     // Verify ownership of the associated project
-    const { data: project, error: pError } = await supabase
-      .from('projects')
-      .select('*')
-      .eq('id', spec.projectId)
-      .single();
-
-    if (pError || !project || project.userId !== req.user.id) {
+    if (spec.project.userId !== req.user.id) {
       return res.status(403).json({ error: 'Access Denied: You do not own this project' });
     }
 
@@ -248,24 +236,29 @@ router.get('/:id/srs', validateSchema(getSrsSchema), aiLimiter, async (req, res)
         }
       }
 
-      // Compile on-the-fly and upload to Supabase Storage if not exists
+      // Compile on-the-fly and pipe directly to response (Streaming)
       const pdfStream = compileMarkdownToPdfStream(markdown);
-      const buffer = await streamToBuffer(pdfStream);
-
-      const { error: uploadError } = await supabase.storage
-        .from('srs-documents')
-        .upload(filePath, buffer, {
-          contentType: 'application/pdf',
-          upsert: true
-        });
-
-      if (uploadError) {
-        console.error('Failed to upload PDF to Supabase Storage:', uploadError);
-      }
-
+      
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `attachment; filename="srs_${spec.id}.pdf"`);
-      return res.send(buffer);
+
+      // Accumulate buffer asynchronously while streaming to upload to Supabase in the background
+      const chunks = [];
+      pdfStream.on('data', (chunk) => chunks.push(chunk));
+      pdfStream.on('end', () => {
+        const buffer = Buffer.concat(chunks);
+        supabase.storage
+          .from('srs-documents')
+          .upload(filePath, buffer, {
+            contentType: 'application/pdf',
+            upsert: true
+          })
+          .catch((uploadError) => {
+            console.error('Failed to upload PDF to Supabase Storage in background:', uploadError);
+          });
+      });
+
+      pdfStream.pipe(res);
     } else {
       return res.status(400).json({ error: 'Unsupported format. Use pdf or markdown.' });
     }
