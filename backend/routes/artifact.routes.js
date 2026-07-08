@@ -23,6 +23,18 @@ function streamToBuffer(stream) {
   });
 }
 
+// Helper to pre-warm PlantUML cache by triggering PNG generation in backend
+async function preWarmPlantUmlUrl(url) {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    await fetch(url, { signal: controller.signal });
+    clearTimeout(timeoutId);
+  } catch (err) {
+    console.warn(`[PlantUML Pre-warm Warning] Failed to fetch: ${url}. Message: ${err.message}`);
+  }
+}
+
 const aiLimiter = createRateLimiter({
   windowMs: 60 * 1000, // 1 minute
   max: 60,
@@ -80,10 +92,14 @@ router.get('/:id/diagrams', validateSchema(getDiagramsSchema), aiLimiter, async 
         puml = await generateUseCasePuml(master.actors, master.features);
       }
 
+      const url = encodePumlToUrl(puml);
       master.diagrams[type] = {
         plantuml: puml,
-        url: encodePumlToUrl(puml)
+        url
       };
+
+      // Pre-warm PlantUML server cache
+      await preWarmPlantUmlUrl(url);
 
       const { error: updateError } = await supabase
         .from('specifications')
@@ -130,6 +146,13 @@ router.get('/:id/diagrams', validateSchema(getDiagramsSchema), aiLimiter, async 
         url: encodePumlToUrl(classPuml)
       }
     };
+
+    // Pre-warm all three PlantUML diagrams concurrently in the background/parallel
+    await Promise.all([
+      preWarmPlantUmlUrl(diagrams.usecase.url),
+      preWarmPlantUmlUrl(diagrams.er.url),
+      preWarmPlantUmlUrl(diagrams.class.url)
+    ]);
 
     // Store generated diagrams in masterJson
     master.diagrams = diagrams;

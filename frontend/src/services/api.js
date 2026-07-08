@@ -77,6 +77,20 @@ export const api = {
     if (error) throw error;
   },
 
+  async resetPassword(email) {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin
+    });
+    if (error) throw error;
+  },
+
+  async updatePassword(newPassword) {
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword
+    });
+    if (error) throw error;
+  },
+
   getCurrentUser() {
     const id = localStorage.getItem('userId');
     const email = localStorage.getItem('userEmail');

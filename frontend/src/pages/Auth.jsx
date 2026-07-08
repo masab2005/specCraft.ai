@@ -3,6 +3,7 @@ import { api } from '../services/api';
 
 export default function Auth({ onLoginSuccess }) {
   const [isSignUp, setIsSignUp] = useState(false);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -11,8 +12,8 @@ export default function Auth({ onLoginSuccess }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!email || !password) {
-      setError('Please fill in all fields.');
+    if (!email) {
+      setError('Please enter your email address.');
       return;
     }
 
@@ -21,11 +22,19 @@ export default function Auth({ onLoginSuccess }) {
       return;
     }
 
+    if (!isForgotPassword && !password) {
+      setError('Please enter your password.');
+      return;
+    }
+
     setLoading(true);
     setError('');
     setSuccessMessage('');
     try {
-      if (isSignUp) {
+      if (isForgotPassword) {
+        await api.resetPassword(email);
+        setSuccessMessage('Password reset link sent! Please check your email inbox.');
+      } else if (isSignUp) {
         const data = await api.signUp(email, password);
         if (data.session) {
           onLoginSuccess(data.user);
@@ -108,27 +117,35 @@ export default function Auth({ onLoginSuccess }) {
 
         <div className="w-full max-w-sm">
           <div className="mb-8">
-            <h2 className="text-2xl font-bold text-[#0a1317] dark:text-white mb-2 tracking-tight">Welcome to specCraft.ai</h2>
-            <p className="text-slate-500 text-xs">Sign in or create your account to continue.</p>
+            <h2 className="text-2xl font-bold text-[#0a1317] dark:text-white mb-2 tracking-tight">
+              {isForgotPassword ? 'Reset Password' : 'Welcome to specCraft.ai'}
+            </h2>
+            <p className="text-slate-500 text-xs">
+              {isForgotPassword 
+                ? "Enter your email address and we'll send you a recovery link." 
+                : 'Sign in or create your account to continue.'}
+            </p>
           </div>
 
           {/* Toggle Tabs */}
-          <div className="flex border-b border-[#dee3e9] dark:border-[#ced0d4]/10 mb-6">
-            <button
-              type="button"
-              onClick={() => { setIsSignUp(false); setError(''); setSuccessMessage(''); }}
-              className={`flex-1 pb-3 text-xs font-bold uppercase tracking-wider text-center border-b-2 transition-all duration-200 ${!isSignUp ? 'border-[#0a1317] dark:border-white text-[#0a1317] dark:text-white' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
-            >
-              Sign In
-            </button>
-            <button
-              type="button"
-              onClick={() => { setIsSignUp(true); setError(''); setSuccessMessage(''); }}
-              className={`flex-1 pb-3 text-xs font-bold uppercase tracking-wider text-center border-b-2 transition-all duration-200 ${isSignUp ? 'border-[#0a1317] dark:border-white text-[#0a1317] dark:text-white' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
-            >
-              Create Account
-            </button>
-          </div>
+          {!isForgotPassword && (
+            <div className="flex border-b border-[#dee3e9] dark:border-[#ced0d4]/10 mb-6">
+              <button
+                type="button"
+                onClick={() => { setIsSignUp(false); setError(''); setSuccessMessage(''); }}
+                className={`flex-1 pb-3 text-xs font-bold uppercase tracking-wider text-center border-b-2 transition-all duration-200 ${!isSignUp ? 'border-[#0a1317] dark:border-white text-[#0a1317] dark:text-white' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+              >
+                Sign In
+              </button>
+              <button
+                type="button"
+                onClick={() => { setIsSignUp(true); setError(''); setSuccessMessage(''); }}
+                className={`flex-1 pb-3 text-xs font-bold uppercase tracking-wider text-center border-b-2 transition-all duration-200 ${isSignUp ? 'border-[#0a1317] dark:border-white text-[#0a1317] dark:text-white' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+              >
+                Create Account
+              </button>
+            </div>
+          )}
 
           {error && (
             <div className="bg-red-50/50 dark:bg-red-950/20 text-[#e41e3f] dark:text-red-400 p-3 rounded-lg text-xs mb-4 flex items-center gap-2 border border-[#e41e3f]/20">
@@ -158,20 +175,31 @@ export default function Auth({ onLoginSuccess }) {
               />
             </div>
 
-            <div>
-              <div className="flex justify-between items-center mb-2">
-                <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" htmlFor="password">Password</label>
+            {!isForgotPassword && (
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" htmlFor="password">Password</label>
+                  {!isSignUp && (
+                    <button
+                      type="button"
+                      onClick={() => { setIsForgotPassword(true); setError(''); setSuccessMessage(''); }}
+                      className="text-[10px] text-[#0064e0] hover:underline font-bold uppercase tracking-wider focus:outline-none"
+                    >
+                      Forgot Password?
+                    </button>
+                  )}
+                </div>
+                <input
+                  className="w-full bg-white dark:bg-[#1c1e21] text-[#0a1317] dark:text-[#f1f4f7] text-sm px-3 py-2.5 rounded-lg border border-[#ced0d4] dark:border-[#ced0d4]/15 focus:outline-none focus:border-[#1876f2] focus:ring-2 focus:ring-[#1876f2]/15 transition-all duration-200 placeholder-slate-400"
+                  id="password"
+                  placeholder="••••••••"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={loading}
+                />
               </div>
-              <input
-                className="w-full bg-white dark:bg-[#1c1e21] text-[#0a1317] dark:text-[#f1f4f7] text-sm px-3 py-2.5 rounded-lg border border-[#ced0d4] dark:border-[#ced0d4]/15 focus:outline-none focus:border-[#1876f2] focus:ring-2 focus:ring-[#1876f2]/15 transition-all duration-200 placeholder-slate-400"
-                id="password"
-                placeholder="••••••••"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={loading}
-              />
-            </div>
+            )}
 
             <div className="pt-2">
               <button
@@ -179,10 +207,28 @@ export default function Auth({ onLoginSuccess }) {
                 type="submit"
                 disabled={loading}
               >
-                {loading ? 'Processing…' : isSignUp ? 'Create Account' : 'Sign In to Console'}
+                {loading 
+                  ? 'Processing…' 
+                  : isForgotPassword 
+                    ? 'Send Reset Link' 
+                    : isSignUp 
+                      ? 'Create Account' 
+                      : 'Sign In to Console'}
                 <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
               </button>
             </div>
+
+            {isForgotPassword && (
+              <div className="text-center pt-4">
+                <button
+                  type="button"
+                  onClick={() => { setIsForgotPassword(false); setError(''); setSuccessMessage(''); }}
+                  className="text-[10px] text-slate-500 hover:text-[#0a1317] dark:hover:text-white transition-colors font-bold uppercase tracking-wider"
+                >
+                  Back to Sign In
+                </button>
+              </div>
+            )}
           </form>
 
           {/* Secure indicator */}

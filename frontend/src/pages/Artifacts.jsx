@@ -7,6 +7,37 @@ export default function Artifacts({ specification, project, onBack, theme, toggl
   const [srsMarkdown, setSrsMarkdown] = useState('');
   const [error, setError] = useState('');
 
+  // Auto-retry and loading states for on-the-fly PlantUML image rendering
+  const [retryKeys, setRetryKeys] = useState({});
+  const [imageState, setImageState] = useState({}); // tab -> 'loading' | 'loaded' | 'error'
+
+  const handleImageLoad = (tab) => {
+    setImageState(prev => ({ ...prev, [tab]: 'loaded' }));
+  };
+
+  const handleImageError = (tab) => {
+    const retries = retryKeys[tab] || 0;
+    if (retries < 6) {
+      setImageState(prev => ({ ...prev, [tab]: 'loading' }));
+      setTimeout(() => {
+        setRetryKeys(prev => ({
+          ...prev,
+          [tab]: retries + 1
+        }));
+      }, 1500);
+    } else {
+      setImageState(prev => ({ ...prev, [tab]: 'error' }));
+    }
+  };
+
+  useEffect(() => {
+    if (diagrams && diagrams[activeTab]) {
+      if (imageState[activeTab] !== 'loaded') {
+        setImageState(prev => ({ ...prev, [activeTab]: 'loading' }));
+      }
+    }
+  }, [activeTab, diagrams]);
+
   // Sequential loading states
   const [genActive, setGenActive] = useState(true);
   const [genSteps, setGenSteps] = useState([
@@ -400,12 +431,42 @@ export default function Artifacts({ specification, project, onBack, theme, toggl
                         {activeTab === 'er' ? 'ER Diagram Model' : activeTab === 'class' ? 'Class Model' : 'Use Case Model'}
                       </h3>
                       
-                      <div className="bg-[#f1f4f7]/30 dark:bg-[#0a1317]/40 border border-[#dee3e9] dark:border-[#ced0d4]/10 rounded-lg p-6 flex items-center justify-center min-h-[300px] w-full">
-                        <img
-                          src={diagrams[activeTab]?.url}
-                          alt={`${activeTab} diagram`}
-                          className="max-h-[500px] object-contain border border-[#dee3e9] dark:border-zinc-800 bg-white dark:bg-[#1c1e21] p-4 rounded-lg"
-                        />
+                      <div className="bg-[#f1f4f7]/30 dark:bg-[#0a1317]/40 border border-[#dee3e9] dark:border-[#ced0d4]/10 rounded-lg p-6 flex items-center justify-center min-h-[300px] w-full relative">
+                        {diagrams[activeTab]?.url && (
+                          <img
+                            key={`${activeTab}-${retryKeys[activeTab] || 0}`}
+                            src={`${diagrams[activeTab]?.url}${retryKeys[activeTab] ? `?retry=${retryKeys[activeTab]}` : ''}`}
+                            alt={`${activeTab} diagram`}
+                            onLoad={() => handleImageLoad(activeTab)}
+                            onError={() => handleImageError(activeTab)}
+                            className={`max-h-[500px] object-contain border border-[#dee3e9] dark:border-zinc-800 bg-white dark:bg-[#1c1e21] p-4 rounded-lg transition-opacity duration-300 ${
+                              imageState[activeTab] === 'loaded' ? 'opacity-100' : 'opacity-0 absolute'
+                            }`}
+                          />
+                        )}
+
+                        {imageState[activeTab] === 'loading' && (
+                          <div className="flex flex-col items-center gap-3">
+                            <div className="w-8 h-8 border-2 border-[#0064e0] border-t-transparent rounded-full animate-spin"></div>
+                            <span className="text-xs text-slate-500 font-medium dark:text-slate-400">Rendering preview on PlantUML server...</span>
+                          </div>
+                        )}
+
+                        {imageState[activeTab] === 'error' && (
+                          <div className="flex flex-col items-center gap-2 text-red-500 dark:text-red-400">
+                            <span className="material-symbols-outlined text-[32px]">error_outline</span>
+                            <span className="text-xs font-semibold">Failed to load diagram preview.</span>
+                            <button
+                              onClick={() => {
+                                setRetryKeys(prev => ({ ...prev, [activeTab]: 0 }));
+                                setImageState(prev => ({ ...prev, [activeTab]: 'loading' }));
+                              }}
+                              className="text-[10px] text-[#0064e0] hover:underline font-bold uppercase tracking-wider mt-2"
+                            >
+                              Retry Now
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
 

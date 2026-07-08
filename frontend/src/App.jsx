@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard';
 import Wizard from './pages/Wizard';
 import Workspace from './pages/Workspace';
 import Artifacts from './pages/Artifacts';
+import ResetPassword from './pages/ResetPassword';
 
 function App() {
   const [view, setView] = useState('auth'); // auth, dashboard, wizard, workspace, artifacts
@@ -29,6 +30,13 @@ function App() {
 
   // Check user session on boot and register unauthorized listener
   useEffect(() => {
+    // Check if redirecting from a password recovery link
+    const hash = window.location.hash;
+    if (hash && (hash.includes('type=recovery') || hash.includes('access_token='))) {
+      setView('reset-password');
+      return;
+    }
+
     const currentUser = api.getCurrentUser();
     if (currentUser) {
       setUser(currentUser);
@@ -80,6 +88,10 @@ function App() {
     <div className="min-h-screen bg-background">
       {view === 'auth' && (
         <Auth onLoginSuccess={handleLoginSuccess} />
+      )}
+
+      {view === 'reset-password' && (
+        <ResetPassword onResetSuccess={() => setView('auth')} />
       )}
       
       {view === 'dashboard' && (
